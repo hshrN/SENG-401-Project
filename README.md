@@ -168,7 +168,7 @@ python app.py
 
 You should see:
 ```
- * Running on http://127.0.0.1:5000
+ * Running on http://127.0.0.1:5001
  * Debug mode: on
 ```
 
@@ -190,20 +190,18 @@ This opens http://localhost:3000 in your browser automatically.
 In another terminal:
 
 ```bash
-curl http://localhost:5000/api/health
+curl http://localhost:5001/api/health
 ```
 
 You should see: `{"status":"ok"}`
 
 ### 2. Check the Frontend
 
-Visit http://localhost:3000 in your browser. You should see the React app load (even if it's empty).
+Visit http://localhost:3000 in your browser. You should see the React app load
 
 Open browser developer tools (F12 → Console tab). There should be no errors.
 
 ---
-
-## Understanding the Code
 
 ### Backend (Flask)
 
@@ -223,10 +221,6 @@ Open browser developer tools (F12 → Console tab). There should be no errors.
 
 Each `db.Column()` = one table column. Types like `db.Integer`, `db.String()`, `db.DateTime` define what kind of data goes there.
 
-### Frontend (React)
-
-See `frontend/README.md` for frontend-specific code documentation.
-
 ---
 
 ## Making Changes to the Database Schema
@@ -237,8 +231,6 @@ If you need to add columns or tables:
 2. Run: `flask db migrate -m "Description of change"`
 3. Run: `flask db upgrade`
 4. Commit the new migration file to Git
-
-Your teammates pull the changes and run `flask db upgrade` to sync their local database.
 
 ---
 
@@ -259,7 +251,7 @@ Make sure PostgreSQL is running:
 - **macOS:** `brew services list | grep postgresql`
 - **Ubuntu/Debian:** `sudo systemctl status postgresql`
 
-### "Port 3000 or 5000 already in use"
+### "Port 3000 or 5001 already in use"
 Something else is using that port. Either close it or run Flask/npm on different ports.
 
 ### "ModuleNotFoundError: No module named 'flask'"
@@ -268,58 +260,6 @@ Your virtual environment isn't activated. Run:
 source venv/bin/activate
 ```
 
----
-
-## Git Workflow
-
-**Commit frequently with clear messages:**
-
-```bash
-git add .
-git commit -m "Add card endpoints" 
-git push
-```
-
-**Important:** Don't commit:
-- `venv/` (Python packages)
-- `node_modules/` (Node packages)
-- `.env` (secrets)
-- `*.db` (database files)
-
-These are in `.gitignore` automatically.
-
----
-
-## Team Collaboration
-
-**Frontend team (Kai Christie, Ethan Klassen):**
-- Work in the `frontend/` folder
-- Build React components
-- Call backend API endpoints
-
-**Backend team (Hashir Naeem, Moyo Ogunjobi):**
-- Work in the `backend/` folder
-- Build Flask API endpoints
-- Manage database schema
-
-**DevOps team (Carl Soriano, Abenezer Erkalo):**
-- Manage deployment
-- Set up CI/CD pipelines
-- Monitor infrastructure
-
-**Communication:** When adding new API endpoints or database tables, notify the frontend team so they know what to call.
-
----
-
-## Next Steps
-
-1. **Backend:** Build API endpoints for creating players, starting games, getting cards, submitting choices
-2. **Frontend:** Build card UI component, game state management, metrics display
-3. **Integration:** Connect frontend to backend endpoints
-4. **Testing:** Write tests for critical game logic
-5. **Deployment:** Deploy to production (Heroku, AWS, etc.)
-
----
 
 ## Resources
 
