@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Setup Instructions
 
 ## Tech Stack
@@ -332,3 +333,5 @@ These are in `.gitignore` automatically.
 ## License
 
 TBD
+=======
+
