@@ -3,24 +3,60 @@ import styles from "./Home.module.css"
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
+
 const Home = () => {
   const { isLoggedIn, logout } = useAuth();
 
   return (
-    <div>
-      <h1>Home Page</h1>
+    <div className={styles.container}>
+      
+
+      <h1 className={styles.title}>SENG 401 Project Name</h1>
+      <p className={styles.description}>
+      </p>
+
+      <div className={styles.cardRow}>
+        {/* city card on left */}
+        <img
+          src="/assets/card_city.png"
+          alt="city card"
+          className={styles.svgCard}
+        />
+
+        <div className={styles.buttonRow}>
+
         {isLoggedIn ? (
-          <button onClick={logout}>
+          <button className={styles.button} onClick={logout}>
             Logout
           </button>
         ) : (
-          <Link to="/login" >Login</Link>
+          <Link className={styles.link} to="/login">
+            Login
+          </Link>
         )}
-        <br></br>
-      <Link to = "/game" >Play</Link>
+
+         {/* about and play buttons */}
+
+        <Link className={styles.aboutButton} to="/about">
+          About
+        </Link>
+
+        <Link className={styles.playButton} to="/game">
+          Play
+        </Link>
+      </div>
+        {/* village stars card on right */}
+        <img
+          src="/assets/card_village_stars.png"
+          alt="village stars card"
+          className={styles.starCard}
+        />
+      </div>
+
+      
     </div>
-  )
     
+  );
 };
 
 export default Home;

@@ -1,0 +1,32 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f0f0f0 0%, #d9d9d9 100%);
+  color: #333;
+  padding: 2rem;
+}
+
+.title {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.text {
+  max-width: 600px;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.link {
+  color: #0077cc;
+  text-decoration: none;
+  margin-top: 1.5rem;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
