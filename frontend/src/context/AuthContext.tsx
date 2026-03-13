@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { loginRequest, signupRequest, LoginRequest, SignupRequest, User } from "../components/AuthService";
+import { loginRequest, signupRequest, LoginRequest, SignupRequest, User } from "../services/AuthService";
 
 type AuthContextType = {
   user: User | null;
