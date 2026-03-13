@@ -64,7 +64,7 @@ const SignUp = () => {
 
                 <button id = 'signup-button' className = {styles.signupButton}>Sign Up</button>
                 <div>
-                  <span>Akready have an account? </span><Link className = {styles.loginLink}to = "/login">Login</Link>
+                  <span>Already have an account? </span><Link className = {styles.loginLink}to = "/login">Login</Link>
                 </div>
                 {message && <p className={styles.errorMessage}>{message}</p>}
             </form>
