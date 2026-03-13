@@ -1,27 +1,63 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import styles from "./Login.module.css"
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
-  const { login } = useAuth();
-  const navigate = useNavigate();
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [message, setMessage] = useState("");
+    const navigate = useNavigate();
+    const { login } = useAuth();
 
-  const handleLogin = () => {
-    login({
-      id: 1,
-      username: "ExampleUsername",
-      password: "testing"
-    });
+    const handleLogin = async (e: React.SubmitEvent) => {
+        e.preventDefault();
+        setMessage("");
 
-    navigate("/");
-  };
+        if(!password) {
+          setMessage("Please enter a Password");
+          return;
+        }
+        if(!username) {
+          setMessage("Please enter a Username");
+          return;
+        }
 
-  return (
-    <div>
-      <h1>Login</h1>
-      <button onClick={handleLogin}>Log In</button>
-    </div>
-  );
-};
+        try {
+          await login({ username, password});
+          navigate("/home");
+        } catch (error){
+          setMessage((error as Error).message);
+        }
+    }
+
+    return (
+        <div className={styles.container}>
+            <form className = {styles.loginForm} onSubmit={handleLogin} >
+                <h2>Login</h2>
+
+                <input 
+                type="text" 
+                placeholder='Username'
+                className = {styles.loginFormInputs}
+                onChange = {(e) => setUsername(e.target.value)}
+                />
+                
+                <input 
+                type="password" 
+                placeholder='Password'
+                className = {styles.loginFormInputs} 
+                onChange = {(e) => setPassword(e.target.value)}
+                />
+
+                <button className = {styles.loginButton}>Login</button>
+                <div>
+                  <span>Don't have an account? </span><Link to = "/signup">Sign Up</Link>
+                </div>
+                {message && <p className={styles.errorMessage}>{message}</p>}
+            </form>
+        </div>
+    );
+}
 
 export default Login;

@@ -1,16 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-
-type User = {
-  id: number;
-  username: string;
-  password: string;
-};
+import { loginRequest, signupRequest, LoginRequest, SignupRequest, User } from "../components/AuthService";
 
 type AuthContextType = {
   user: User | null;
   isLoggedIn: boolean;
   isLoading: boolean;
-  login: (userData: User) => void;
+  login: (data: LoginRequest) => Promise<void>;
+  signup: (data: SignupRequest) => Promise<void>;
   logout: () => void;
 };
 
@@ -24,9 +20,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // When the app refreshes/loads
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-
+    
     if (storedUser) {
       try {
         const parsedUser: User = JSON.parse(storedUser);
@@ -40,9 +37,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setIsLoading(false);
   }, []);
 
-  const login = (userData: User) => {
-    setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
+  const handleAuthSuccess = (user: User) => {
+    setUser(user);
+    localStorage.setItem("user", JSON.stringify(user));
+  };
+
+  const login = async (data: LoginRequest) => {
+    const result = await loginRequest(data);
+    handleAuthSuccess(result.user);
+  };
+
+  const signup = async (data: SignupRequest) => {
+    const result = await signupRequest(data);
+    handleAuthSuccess(result.user);
   };
 
   const logout = () => {
@@ -55,6 +62,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     isLoggedIn: !!user,
     isLoading,
     login,
+    signup,
     logout,
   };
 
