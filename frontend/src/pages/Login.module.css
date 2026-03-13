@@ -1,0 +1,67 @@
+.container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+  color: #fff;
+  padding: 2rem;
+  text-align: center;
+}
+
+.loginForm {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: white;
+    border-radius: 20px;
+    padding: 3vh;
+    margin: 60px auto;
+    max-width: 35vw;
+    box-shadow: 0px 20px 40px rgba(0,0,0,0.15);
+    color: black;
+    gap: 12px;
+}
+
+.loginFormInputs {
+    width: 40%;
+    padding: 12px 14px;
+    margin: 8px 0;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background: #f9f9f9;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.loginButton {
+    width: 40%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #66a6ff, #89f7fe);
+    color: white;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.errorMessage {
+    color: red;
+}
+
+.signupLink {
+    text-decoration: none;
+}
+.signupLink:hover {
+    text-decoration: underline;
+}
+
+.link {
+    color: #0077cc;
+    text-decoration: none;
+    margin-top: 1.5rem;
+
+}
+
+.link:hover {
+    text-decoration: underline;
+}
