@@ -5,13 +5,21 @@ import { useAuth } from "../context/AuthContext";
 
 
 const Home = () => {
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, logout, user } = useAuth();
 
   return (
     <div className={styles.container}>
       
+        {isLoggedIn ? (
+          <h1 className={styles.title}>
+            Welcome to Project Name, {user?.username}!
+          </h1>
+        ) : (
+          <h1 
+            className={styles.title}>Welcome to Project Name
+          </h1>
+        )}
 
-      <h1 className={styles.title}>SENG 401 Project Name</h1>
       <p className={styles.description}>
       </p>
 

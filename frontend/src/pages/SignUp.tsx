@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styles from "./SignUp.module.css"
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from "../context/AuthContext";
 
 const SignUp = () => {
@@ -30,7 +30,7 @@ const SignUp = () => {
 
         try {
           await signup({ username, password, confirmPassword });
-          navigate("/home");
+          navigate("/");
         } catch (error){
           setMessage((error as Error).message);
         }
@@ -63,6 +63,9 @@ const SignUp = () => {
                 />
 
                 <button id = 'signup-button' className = {styles.signupButton}>Sign Up</button>
+                <div>
+                  <span>Akready have an account? </span><Link className = {styles.loginLink}to = "/login">Login</Link>
+                </div>
                 {message && <p className={styles.errorMessage}>{message}</p>}
             </form>
         </div>

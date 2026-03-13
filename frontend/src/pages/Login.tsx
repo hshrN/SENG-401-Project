@@ -25,7 +25,7 @@ const Login = () => {
 
         try {
           await login({ username, password});
-          navigate("/home");
+          navigate("/");
         } catch (error){
           setMessage((error as Error).message);
         }
@@ -52,10 +52,13 @@ const Login = () => {
 
                 <button className = {styles.loginButton}>Login</button>
                 <div>
-                  <span>Don't have an account? </span><Link to = "/signup">Sign Up</Link>
+                  <span>Don't have an account? </span><Link className = {styles.signupLink}to = "/signup">Sign Up</Link>
                 </div>
                 {message && <p className={styles.errorMessage}>{message}</p>}
             </form>
+              <a className={styles.link} href="/">
+                ← Back to Home
+              </a>
         </div>
     );
 }
