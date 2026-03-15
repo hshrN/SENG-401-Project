@@ -99,18 +99,15 @@ def signup():
 def create_session():
     data = request.get_json()
     username = data.get('username', '').strip()
-    role = data.get('role', '').strip()
 
-    if not username or not role:
-        return jsonify({"error": "username and role are required"}), 400
+    if not username:
+        return jsonify({"error": "username is required"}), 400
 
     player = Player.query.filter_by(username=username).first()
     if not player:
-        player = Player(username=username)
-        db.session.add(player)
-        db.session.flush()  # get player.id before commit
+        return jsonify({"error": "Player not found. Please sign up first."}), 404
 
-    session = GameSession(player_id=player.id, role=role)
+    session = GameSession(player_id=player.id)
     db.session.add(session)
     db.session.commit()
 
@@ -118,8 +115,7 @@ def create_session():
         "session_id": session.id,
         "biosphere": session.biosphere,
         "society": session.society,
-        "economy": session.economy,
-        "role": session.role
+        "economy": session.economy
     }), 201
 
 

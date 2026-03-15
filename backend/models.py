@@ -9,9 +9,8 @@ class Player(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(255), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False) 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    # Relationships
     sessions = db.relationship('GameSession', backref='player', lazy=True)
 
     def __repr__(self):
@@ -31,7 +30,6 @@ class GameSession(db.Model):
 
     # Game state
     status = db.Column(db.String(50), default='active', nullable=False)  # 'active', 'ended'
-    role = db.Column(db.String(100), nullable=True)  # e.g. 'National Leader', 'NGO Director'
     final_score = db.Column(db.Integer, nullable=True)  # calculated on game end
 
     # Timestamps
