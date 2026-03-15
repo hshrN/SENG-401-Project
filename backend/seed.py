@@ -2,8 +2,18 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+from argon2 import PasswordHasher
+
 from app import app
-from models import db, Scenario
+from models import db, Scenario, Player
+
+ph = PasswordHasher()
+
+# Test accounts (only created if they don't exist). Use these to log in without signing up.
+TEST_USERS = [
+    {"username": "test", "password": "test123"},
+    {"username": "demo", "password": "demo123"},
+]
 
 scenarios = [
     {
@@ -115,15 +125,26 @@ scenarios = [
 
 def seed():
     with app.app_context():
+        added_users = 0
+        for u in TEST_USERS:
+            if Player.query.filter_by(username=u["username"]).first() is None:
+                player = Player(username=u["username"], password_hash=ph.hash(u["password"]))
+                db.session.add(player)
+                added_users += 1
+
         existing = Scenario.query.count()
-        if existing > 0:
-            print(f"Scenarios table already has {existing} rows. Skipping seed.")
-            return
-        for data in scenarios:
-            scenario = Scenario(**data)
-            db.session.add(scenario)
+        if existing == 0:
+            for data in scenarios:
+                scenario = Scenario(**data)
+                db.session.add(scenario)
+
         db.session.commit()
-        print(f"✅ Seeded {len(scenarios)} scenarios successfully.")
+        if added_users:
+            print("✅ Created test accounts: test/test123, demo/demo123")
+        if existing == 0:
+            print(f"✅ Seeded {len(scenarios)} scenarios successfully.")
+        elif existing > 0:
+            print(f"Scenarios already have {existing} rows. Skipped scenario seed.")
 
 if __name__ == '__main__':
     seed()

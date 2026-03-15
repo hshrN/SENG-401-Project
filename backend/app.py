@@ -15,7 +15,7 @@ ph = PasswordHasher()
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/401GameDB'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://localhost/401GameDB')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 from models import db, Player, GameSession, Scenario, GameRound
@@ -97,8 +97,8 @@ def signup():
 # --- POST /api/sessions ---
 @app.route('/api/sessions', methods=['POST'])
 def create_session():
-    data = request.get_json()
-    username = data.get('username', '').strip()
+    data = request.get_json(silent=True) or {}
+    username = (data.get('username') or '').strip()
 
     if not username:
         return jsonify({"error": "username is required"}), 400

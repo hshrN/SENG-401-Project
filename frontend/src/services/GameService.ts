@@ -8,7 +8,7 @@ export type SessionResponse = {
 };
 
 export type CardResponse = {
-  card_id: number;
+  scenario_id: number;
   scenario_text: string;
   decision_a: string;
   decision_b: string;
@@ -37,23 +37,23 @@ export async function createSession(username: string): Promise<SessionResponse> 
 }
 
 export async function getNextCard(session_id: number): Promise<CardResponse> {
-  const response = await fetch(`${API_BASE}/api/cards/next?session_id=${session_id}`);
+  const response = await fetch(`${API_BASE}/api/scenarios/next?session_id=${session_id}`);
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error || "No more cards");
+    throw new Error(error.error || "No more scenarios");
   }
   return response.json();
 }
 
 export async function submitRound(
   session_id: number,
-  card_id: number,
+  scenario_id: number,
   choice_made: "a" | "b"
 ): Promise<RoundResponse> {
   const response = await fetch(`${API_BASE}/api/rounds`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ session_id, card_id, choice_made }),
+    body: JSON.stringify({ session_id, scenario_id, choice_made }),
   });
   if (!response.ok) {
     const error = await response.json();

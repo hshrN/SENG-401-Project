@@ -29,11 +29,15 @@ const Game = () => {
   }, [session]);
 
   const handleStart = async () => {
-    if (!user) return;
+    const username = user?.username?.trim();
+    if (!username) {
+      setError("You must be logged in to start a game.");
+      return;
+    }
     setIsLoading(true);
     setError(null);
     try {
-      const newSession = await createSession(user.username);
+      const newSession = await createSession(username);
       setSession(newSession);
       setBiosphere(newSession.biosphere);
       setSociety(newSession.society);
@@ -64,7 +68,7 @@ const Game = () => {
     setChoiceDisabled(true);
     setError(null);
     try {
-      const result = await submitRound(session.session_id, currentCard.card_id, choice);
+      const result = await submitRound(session.session_id, currentCard.scenario_id, choice);
       setBiosphere(result.biosphere);
       setSociety(result.society);
       setEconomy(result.economy);
