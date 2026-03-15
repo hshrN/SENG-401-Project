@@ -1,42 +1,42 @@
-<<<<<<< HEAD
 # Setup Instructions
 
 ## Tech Stack
 
 **Frontend:**
-- React 18 (TypeScript)
+- React 19 (TypeScript)
+- React Router
 
 **Backend:**
 - Flask (Python web framework)
 - Flask-SQLAlchemy (database ORM)
 - Flask-Migrate (schema management)
 - PostgreSQL (database)
+- Argon2 (password hashing)
 
 ## Project Structure
 
 ```
-sdg-game-project/
+SENG-401-Project-1/
 ├── backend/                    # Flask API
-│   ├── app.py                 # Flask app setup, routes, CORS
-│   ├── models.py              # Database models (Player, GameSession, Card, Choice)
-│   ├── migrations/            # Database schema versions (Flask-Migrate)
-│   ├── venv/                  # Python virtual environment (don't commit)
-│   ├── requirements.txt       # Python dependencies
-│   ├── .env.example           # Template for environment variables
-│   ├── .env                   # Local config (don't commit)
+│   ├── app.py                 # Flask app, routes (auth, sessions, scenarios, rounds)
+│   ├── models.py               # Database models (Player, GameSession, Scenario, GameRound)
+│   ├── seed.py                 # Seeds test users and scenarios
+│   ├── migrations/             # Database schema versions (Flask-Migrate)
+│   ├── venv/                   # Python virtual environment (don't commit)
+│   ├── requirements.txt        # Python dependencies
+│   ├── .env.example            # Template for environment variables
+│   ├── .env                    # Local config (don't commit)
 │   └── .gitignore
 │
 ├── frontend/                   # React TypeScript app
-│   ├── src/                   # React components
-│   ├── public/                # Static assets
-│   ├── package.json           # Node dependencies
-│   ├── tsconfig.json          # TypeScript config
-│   ├── README.md              # Frontend-specific docs
+│   ├── src/                    # React components, pages, services
+│   ├── public/                 # Static assets
+│   ├── package.json            # Node dependencies
+│   ├── tsconfig.json           # TypeScript config
 │   └── .gitignore
 │
-├── .gitignore                 # Global Git rules
-└── README.md                  # This file
-
+├── .gitignore                  # Global Git rules
+└── README.md                   # This file
 ```
 
 ## Prerequisites
@@ -50,7 +50,9 @@ Install these once on your machine:
 
 Verify: `node --version && npm --version`
 
-### 2. Python 3.12+ (for backend)
+### 2. Python 3.12 (for backend)
+Use Python 3.12 for the backend; newer versions (e.g. 3.14) may break `psycopg2-binary`.
+
 - **macOS:** `brew install python@3.12`
 - **Ubuntu/Debian:** `sudo apt-get install python3.12 python3.12-venv`
 - **Windows:** Download from https://www.python.org/
@@ -58,17 +60,20 @@ Verify: `node --version && npm --version`
 Verify: `python3.12 --version`
 
 ### 3. PostgreSQL (for database)
-- **macOS:** `brew install postgresql@15`
+- **macOS:** `brew install postgresql@15` or `postgresql@17`
 - **Ubuntu/Debian:** `sudo apt-get install postgresql postgresql-contrib`
 - **Windows:** Download from https://www.postgresql.org/download/windows/
 
 After installing, start PostgreSQL:
-- **macOS:** `brew services start postgresql@15`
+- **macOS:** `brew services start postgresql@17` (or your version)
 - **Ubuntu/Debian:** `sudo systemctl start postgresql`
 - **Windows:** Usually starts automatically
 
 Verify: `psql --version`
 
+---
+
+## Setup
 
 ### Step 1: Clone the Repository
 
@@ -79,27 +84,39 @@ cd SENG-401-Project
 
 ### Step 2: Set Up the Database
 
-Create the PostgreSQL database:
+Create the PostgreSQL database and a user that can connect. If your PostgreSQL requires a password, create a role and database as the superuser:
+
+```bash
+psql -U postgres -d postgres
+```
+
+In the `psql` prompt:
+
+```sql
+CREATE USER your_username WITH PASSWORD 'your_password' CREATEDB;
+CREATE DATABASE "401GameDB";
+GRANT ALL PRIVILEGES ON DATABASE "401GameDB" TO your_username;
+\c 401GameDB
+GRANT ALL ON SCHEMA public TO your_username;
+GRANT CREATE ON SCHEMA public TO your_username;
+\q
+```
+
+Replace `your_username` and `your_password` with the values you will use in `.env`. On PostgreSQL 15+, granting rights on schema `public` is required for non-owners to create tables.
+
+If your setup uses trust auth and you already have a database, you can instead run:
 
 ```bash
 createdb 401GameDB
 ```
 
-Verify it exists:
-
-```bash
-psql -l | grep 401GameDB
-```
-
 ### Step 3: Set Up the Backend
-
-Navigate to the backend directory:
 
 ```bash
 cd backend
 ```
 
-Create a Python virtual environment:
+Create a Python virtual environment with Python 3.12:
 
 ```bash
 python3.12 -m venv venv
@@ -124,31 +141,44 @@ Create the `.env` file from the template:
 cp .env.example .env
 ```
 
+Edit `.env` and set `DATABASE_URL` so the app can connect. If PostgreSQL requires a username and password:
+
+```
+DATABASE_URL=postgresql://your_username:your_password@localhost/401GameDB
+```
+
+If no password is needed:
+
+```
+DATABASE_URL=postgresql://localhost/401GameDB
+```
+
 Initialize the database (creates all tables):
 
 ```bash
 flask db upgrade
 ```
 
-Verify tables were created:
+Seed test users and scenarios:
 
 ```bash
-psql 401GameDB -c "\dt"
+python seed.py
 ```
 
-You should see 5 tables: `alembic_version`, `player`, `game_session`, `card`, `choice`.
+You should see messages that test accounts and scenarios were created. Verify tables if you like:
+
+```bash
+psql -U your_username -d 401GameDB -c "\dt"
+```
+
+You should see tables including `alembic_version`, `players`, `game_sessions`, `scenarios`, `game_rounds`.
 
 ### Step 4: Set Up the Frontend
 
-Navigate to the frontend directory (from project root):
+From the project root:
 
 ```bash
 cd frontend
-```
-
-Install Node dependencies:
-
-```bash
 npm install
 ```
 
@@ -156,122 +186,134 @@ npm install
 
 ## Running the Application
 
-You need **two terminal windows/tabs** to run both the backend and frontend simultaneously.
+Use two terminal windows/tabs.
 
-### Terminal 1: Start the Backend
+### Terminal 1: Backend
 
 ```bash
 cd backend
-source venv/bin/activate  # or venv\Scripts\activate on Windows
+source venv/bin/activate   # or venv\Scripts\activate on Windows
 python app.py
 ```
 
-You should see:
-```
- * Running on http://127.0.0.1:5001
- * Debug mode: on
-```
+You should see the app running on http://127.0.0.1:5001 with debug mode on.
 
-### Terminal 2: Start the Frontend
+### Terminal 2: Frontend
 
 ```bash
 cd frontend
 npm start
 ```
 
-This opens http://localhost:3000 in your browser automatically.
+The app opens at http://localhost:3000.
+
+---
+
+## Test Accounts
+
+After running `python seed.py`, you can log in with these accounts:
+
+| Username | Password |
+|----------|----------|
+| test     | test123  |
+| demo     | demo123  |
+
+Log in at http://localhost:3000/login before starting a game.
 
 ---
 
 ## Verifying Everything Works
 
-### 1. Test the Backend API
-
-In another terminal:
+### 1. Backend health check
 
 ```bash
 curl http://localhost:5001/api/health
 ```
 
-You should see: `{"status":"ok"}`
+Expected: `{"status":"ok"}`
 
-### 2. Check the Frontend
+### 2. Frontend
 
-Visit http://localhost:3000 in your browser. You should see the React app load
-
-Open browser developer tools (F12 → Console tab). There should be no errors.
+Visit http://localhost:3000. Log in with a test account, then go to Play and click Start Game. You should see scenarios and be able to make choices.
 
 ---
 
-### Backend (Flask)
+## Backend Overview
 
-**app.py** - The entry point
-- Initializes Flask app
-- Configures PostgreSQL database connection
-- Sets up CORS (allows frontend to call backend)
-- Initializes Flask-Migrate (database version control)
-- Imports and registers routes/endpoints
+**app.py**
+- Configures Flask, CORS, and the database from `DATABASE_URL` in `.env`.
+- Routes: `/api/health`, `POST /login`, `POST /signup`, `POST /api/sessions`, `GET /api/scenarios/next`, `POST /api/rounds`.
 
-**models.py** - Database schema
-- Defines 4 tables as Python classes:
-  - `Player`: Stores user accounts
-  - `GameSession`: One playthrough of the game (tracks biosphere, society, economy scores)
-  - `Card`: A game scenario with two decision options
-  - `Choice`: A player's decision on a card and its impact on metrics
+**models.py**
+- **Player:** username, password_hash.
+- **GameSession:** player, biosphere/society/economy metrics, status, final_score.
+- **Scenario:** scenario text, two decisions (A/B) and their impacts on the three metrics.
+- **GameRound:** records each choice in a session and the resulting metric values.
 
-Each `db.Column()` = one table column. Types like `db.Integer`, `db.String()`, `db.DateTime` define what kind of data goes there.
+**seed.py**
+- Creates test users (test/test123, demo/demo123) if they do not exist.
+- Seeds the scenarios table with SDG-themed decision scenarios if it is empty.
 
 ---
 
 ## Making Changes to the Database Schema
 
-If you need to add columns or tables:
-
-1. Edit `models.py` (add new columns or classes)
+1. Edit `models.py` (add or change columns/classes).
 2. Run: `flask db migrate -m "Description of change"`
 3. Run: `flask db upgrade`
-4. Commit the new migration file to Git
+4. Commit the new migration file.
 
 ---
 
 ## Troubleshooting
 
 ### "psycopg2 failed to build" on macOS
-Make sure you're using Python 3.12, not 3.13:
-```bash
-python3.12 --version
+Use Python 3.12 for the backend venv. Create the venv with `python3.12 -m venv venv` and avoid Python 3.14 for this project.
+
+### "fe_sendauth: no password supplied" or "password authentication failed"
+Set `DATABASE_URL` in `backend/.env` with your PostgreSQL username and password, e.g.:
+
+```
+DATABASE_URL=postgresql://username:password@localhost/401GameDB
+```
+
+### "permission denied for schema public"
+Your database user needs permission to create objects in `public`. As superuser (e.g. `psql -U postgres -d 401GameDB`):
+
+```sql
+GRANT ALL ON SCHEMA public TO your_username;
+GRANT CREATE ON SCHEMA public TO your_username;
 ```
 
 ### "createdb: command not found"
-PostgreSQL isn't in your PATH. Reinstall:
-- **macOS:** `brew reinstall postgresql@15`
+PostgreSQL client tools are not in your PATH. Reinstall or add the bin directory to PATH (e.g. Homebrew: `postgresql@17/bin`).
 
-### "Cannot connect to database" error
-Make sure PostgreSQL is running:
+### "Cannot connect to database"
+Ensure PostgreSQL is running:
 - **macOS:** `brew services list | grep postgresql`
 - **Ubuntu/Debian:** `sudo systemctl status postgresql`
 
 ### "Port 3000 or 5001 already in use"
-Something else is using that port. Either close it or run Flask/npm on different ports.
+Stop the process using that port or run the app on a different port.
 
 ### "ModuleNotFoundError: No module named 'flask'"
-Your virtual environment isn't activated. Run:
-```bash
-source venv/bin/activate
-```
+Activate the virtual environment: `source venv/bin/activate` (or Windows equivalent).
 
+### Login returns 401 or game fails with 404
+- Use a test account (test/test123 or demo/demo123) and log in at /login before opening the game.
+- Ensure the backend is running on port 5001 and the frontend is calling http://127.0.0.1:5001 for API requests.
+
+---
 
 ## Resources
 
-- Flask docs: https://flask.palletsprojects.com/
-- SQLAlchemy docs: https://docs.sqlalchemy.org/
-- React docs: https://react.dev/
-- PostgreSQL docs: https://www.postgresql.org/docs/
+- Flask: https://flask.palletsprojects.com/
+- SQLAlchemy: https://docs.sqlalchemy.org/
+- React: https://react.dev/
+- PostgreSQL: https://www.postgresql.org/docs/
 
 ---
 
 ## License
 
 TBD
-=======
-
