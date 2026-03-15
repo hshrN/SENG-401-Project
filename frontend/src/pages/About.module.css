@@ -1,32 +1,80 @@
 .container {
+  min-height: 100vh;
+  width: 100%;
+  background: var(--app-bg);
+  color: var(--app-foreground);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f0f0f0 0%, #d9d9d9 100%);
-  color: #333;
   padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.formWrap {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  box-sizing: border-box;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2.5rem;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--app-surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--app-border);
+  border-radius: 1.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
 }
 
 .title {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-}
-
-.text {
-  max-width: 600px;
-  line-height: 1.6;
-  margin-bottom: 1rem;
+  font-size: 1.75rem;
+  font-weight: 300;
+  letter-spacing: -0.025em;
+  color: var(--app-foreground);
+  margin: 0;
   text-align: center;
 }
 
-.link {
-  color: #0077cc;
-  text-decoration: none;
-  margin-top: 1.5rem;
+.text {
+  max-width: 100%;
+  line-height: 1.7;
+  margin: 0;
+  text-align: center;
+  color: var(--app-muted);
+  font-size: 1rem;
 }
 
-.link:hover {
-  text-decoration: underline;
+.textBlock {
+  width: 100%;
+}
+
+.backLink {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--app-muted);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.backLink:hover {
+  color: var(--app-foreground);
 }
