@@ -1,69 +1,47 @@
 import React from "react";
-import styles from "./Home.module.css"
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-
+import Hero, { HERO_PALETTES } from "../components/hero/Hero";
+import { Star, Globe, Target } from "lucide-react";
 
 const Home = () => {
   const { isLoggedIn, logout, user } = useAuth();
+  const navigate = useNavigate();
 
   return (
-    <div className={styles.container}>
-      
-        {isLoggedIn ? (
-          <h1 className={styles.title}>
-            Welcome to Project Name, {user?.username}!
-          </h1>
-        ) : (
-          <h1 
-            className={styles.title}>Welcome to Project Name
-          </h1>
-        )}
-
-      <p className={styles.description}>
-      </p>
-
-      <div className={styles.cardRow}>
-        {/* city card on left */}
-        <img
-          src="/assets/card_city.png"
-          alt="city card"
-          className={styles.svgCard}
-        />
-
-        <div className={styles.buttonRow}>
-
-        {isLoggedIn ? (
-          <button className={styles.button} onClick={logout}>
-            Logout
-          </button>
-        ) : (
-          <Link className={styles.link} to="/login">
-            Login
-          </Link>
-        )}
-
-         {/* about and play buttons */}
-
-        <Link className={styles.aboutButton} to="/about">
-          About
-        </Link>
-
-        <Link className={styles.playButton} to="/game">
-          Play
-        </Link>
-      </div>
-        {/* village stars card on right */}
-        <img
-          src="/assets/card_village_stars.png"
-          alt="village stars card"
-          className={styles.starCard}
-        />
-      </div>
-
-      
-    </div>
-    
+    <Hero
+      palette={{ tint: HERO_PALETTES.green }}
+      trustBadge={{
+        text: "SDG 17: Partnership for the Goals",
+        icon: (
+          <>
+            <Star className="w-4 h-4 text-amber-300" />
+            <Globe className="w-4 h-4 text-orange-300" />
+            <Target className="w-4 h-4 text-yellow-400" />
+          </>
+        ),
+      }}
+      headline={{
+        line1: "Shape the World.",
+        line2: "One Decision at a Time.",
+      }}
+      subtitle="You will face real global challenges. Every choice affects the balance of our world—biosphere, society, and economy. Play the game and see the impact."
+      buttons={{
+        primary: {
+          text: "Play",
+          onClick: () => navigate("/game"),
+        },
+        secondary: isLoggedIn
+          ? {
+              text: `Logout (${user?.username})`,
+              onClick: logout,
+            }
+          : {
+              text: "Login",
+              onClick: () => navigate("/login"),
+            },
+      }}
+    />
   );
 };
 

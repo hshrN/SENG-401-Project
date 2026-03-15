@@ -1,3 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --app-bg: #0a1612;
+  --app-surface: rgba(5, 46, 34, 0.6);
+  --app-border: rgba(34, 197, 94, 0.25);
+  --app-foreground: rgba(240, 253, 244, 0.95);
+  --app-muted: rgba(187, 247, 208, 0.7);
+  --app-accent: rgba(34, 197, 94, 0.5);
+  --app-primary: #22c55e;
+  --app-primary-hover: #16a34a;
+  --app-error: #f87171;
+}
+
+@keyframes float1 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-10px, 10px); }
+}
+
+@keyframes float2 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(10px, -10px); }
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -5,7 +31,9 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden; /* prevent horizontal scroll when decorative svg extends */
+  overflow-x: hidden;
+  background: var(--app-bg);
+  color: var(--app-foreground);
 }
 
 code {

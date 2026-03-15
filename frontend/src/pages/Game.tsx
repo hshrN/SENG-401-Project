@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import styles from "./Game.module.css";
 import Card from "../components/card/Card";
+import { ScoreOrbit } from "../components/scoreOrbit";
+import GradientBackground from "../components/shared/GradientBackground";
 import { useAuth } from "../context/AuthContext";
 import { createSession, getNextCard, submitRound, SessionResponse, CardResponse } from "../services/GameService";
 
@@ -8,7 +12,6 @@ const Game = () => {
   const { user } = useAuth();
 
   const [session, setSession] = useState<SessionResponse | null>(null);
-
   const [currentCard, setCurrentCard] = useState<CardResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [choiceDisabled, setChoiceDisabled] = useState(false);
@@ -19,7 +22,6 @@ const Game = () => {
 
   const [gameOver, setGameOver] = useState(false);
   const [finalScore, setFinalScore] = useState<number | null>(null);
-
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -42,8 +44,8 @@ const Game = () => {
       setBiosphere(newSession.biosphere);
       setSociety(newSession.society);
       setEconomy(newSession.economy);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError((err as Error).message);
     } finally {
       setIsLoading(false);
     }
@@ -56,7 +58,7 @@ const Game = () => {
       const card = await getNextCard(session_id);
       setCurrentCard(card);
       setChoiceDisabled(false);
-    } catch (err: any) {
+    } catch {
       setGameOver(true);
     } finally {
       setIsLoading(false);
@@ -79,8 +81,8 @@ const Game = () => {
       } else {
         fetchNextCard(session.session_id);
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError((err as Error).message);
       setChoiceDisabled(false);
     }
   };
@@ -96,15 +98,44 @@ const Game = () => {
     setError(null);
   };
 
+  const MetricBar = ({ label, value }: { label: string; value: number }) => {
+    const isLow = value <= 30;
+    return (
+      <div className={styles.metricRow}>
+        <div className={styles.metricLabel}>
+          <span>{label}</span>
+          <span className={styles.metricValue}>{value}</span>
+        </div>
+        <div className={styles.metricTrack}>
+          <div
+            className={`${styles.metricFill} ${isLow ? styles.metricFillLow : styles.metricFillHigh}`}
+            style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
+          />
+        </div>
+      </div>
+    );
+  };
+
   if (!session) {
     return (
       <div className={styles.container}>
-        <h1>SDG 17: Partnership for the Goals</h1>
-        <p>You will face real global challenges. Every decision affects the balance of our world.</p>
-        <button onClick={handleStart} disabled={isLoading}>
-          {isLoading ? "Starting..." : "Start Game"}
-        </button>
-        {error && <p className={styles.error}>{error}</p>}
+        <GradientBackground idPrefix="game" />
+        <Link to="/" className={styles.backLink}>
+          <ArrowLeft size={18} />
+          Back to Home
+        </Link>
+        <div className={styles.content}>
+          <div className={`${styles.card} ${styles.startCard}`}>
+            <h1 className={styles.title}>SDG 17: Partnership for the Goals</h1>
+            <p className={styles.subtitle}>
+              You will face real global challenges. Every decision affects the balance of our world.
+            </p>
+            <button type="button" className={styles.primaryBtn} onClick={handleStart} disabled={isLoading}>
+              {isLoading ? "Starting..." : "Start Game"}
+            </button>
+            {error && <p className={styles.error}>{error}</p>}
+          </div>
+        </div>
       </div>
     );
   }
@@ -112,65 +143,64 @@ const Game = () => {
   if (gameOver) {
     return (
       <div className={styles.container}>
-        <h1>Game Over</h1>
-        <p>One of your metrics collapsed — global coordination failed.</p>
-        {finalScore !== null && <h2>Final Score: {finalScore}</h2>}
-        <div className={styles.metrics}>
-          <MetricBar label="Biosphere" value={biosphere} />
-          <MetricBar label="Society" value={society} />
-          <MetricBar label="Economy" value={economy} />
+        <GradientBackground idPrefix="game" />
+        <Link to="/" className={styles.backLink}>
+          <ArrowLeft size={18} />
+          Back to Home
+        </Link>
+        <div className={styles.content}>
+          <div className={styles.card}>
+            <h1 className={styles.gameOverTitle}>Game Over</h1>
+            <p className={styles.gameOverSubtitle}>One of your metrics collapsed — global coordination failed.</p>
+            {finalScore !== null && <p className={styles.finalScore}>Final Score: {finalScore}</p>}
+            <div className={styles.metrics}>
+              <MetricBar label="Biosphere" value={biosphere} />
+              <MetricBar label="Society" value={society} />
+              <MetricBar label="Economy" value={economy} />
+            </div>
+            <button type="button" className={styles.primaryBtn} onClick={handleRestart}>
+              Play Again
+            </button>
+          </div>
         </div>
-        <button onClick={handleRestart}>Play Again</button>
       </div>
     );
   }
 
   return (
     <div className={styles.container}>
-      <div className={styles.metrics}>
-        <MetricBar label="Biosphere" value={biosphere} />
-        <MetricBar label="Society" value={society} />
-        <MetricBar label="Economy" value={economy} />
+      <GradientBackground idPrefix="game" />
+      <Link to="/" className={styles.backLink}>
+        <ArrowLeft size={18} />
+        Back to Home
+      </Link>
+      <div className={styles.content}>
+        <div className={styles.scenarioWrap}>
+          <ScoreOrbit
+            items={[
+              { id: 1, name: "Biosphere", value: biosphere },
+              { id: 2, name: "Society", value: society },
+              { id: 3, name: "Economy", value: economy },
+            ]}
+            stageSize={800}
+            orbitRadius={360}
+          >
+            {isLoading && <p className={styles.loading}>Loading...</p>}
+            {currentCard && (
+              <Card
+                scenario_text={currentCard.scenario_text}
+                decision_a={currentCard.decision_a}
+                decision_b={currentCard.decision_b}
+                onChoice={handleChoice}
+                disabled={choiceDisabled}
+              />
+            )}
+          </ScoreOrbit>
+        </div>
+        {error && <p className={styles.error}>{error}</p>}
       </div>
-      {isLoading && <p>Loading...</p>}
-      {currentCard && (
-        <Card
-          scenario_text={currentCard.scenario_text}
-          decision_a={currentCard.decision_a}
-          decision_b={currentCard.decision_b}
-          onChoice={handleChoice}
-          disabled={choiceDisabled}
-        />
-      )}
-      {error && <p className={styles.error}>{error}</p>}
     </div>
   );
 };
-
-const MetricBar = ({ label, value }: { label: string; value: number }) => (
-  <div style={{ marginBottom: "0.5rem" }}>
-    <span>
-      {label}: {value}
-    </span>
-    <div
-      style={{
-        background: "#eee",
-        borderRadius: 4,
-        height: 12,
-        width: 200,
-      }}
-    >
-      <div
-        style={{
-          background: value > 30 ? "#2c7a4b" : "#c0392b",
-          width: `${value}%`,
-          height: "100%",
-          borderRadius: 4,
-          transition: "width 0.3s",
-        }}
-      />
-    </div>
-  </div>
-);
 
 export default Game;
