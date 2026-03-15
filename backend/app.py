@@ -18,7 +18,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/401GameDB'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-from models import db, Player, GameSession, Card, GameRound
+from models import db, Player, GameSession, Scenario, GameRound
 db.init_app(app)
 
 migrate = Migrate(app, db)
@@ -119,30 +119,30 @@ def create_session():
     }), 201
 
 
-# --- GET /api/cards/next?session_id=<id> ---
-@app.route('/api/cards/next', methods=['GET'])
-def next_card():
+# --- GET /api/scenarios/next?session_id=<id> ---
+@app.route('/api/scenarios/next', methods=['GET'])
+def next_scenario():
     session_id = request.args.get('session_id', type=int)
     if not session_id:
         return jsonify({"error": "session_id is required"}), 400
 
-    seen_ids = db.session.query(GameRound.card_id).filter_by(session_id=session_id).all()
+    seen_ids = db.session.query(GameRound.scenario_id).filter_by(session_id=session_id).all()
     seen_ids = [row[0] for row in seen_ids]
 
-    query = Card.query
+    query = Scenario.query
     if seen_ids:
-        query = query.filter(~Card.id.in_(seen_ids))
+        query = query.filter(~Scenario.id.in_(seen_ids))
 
     available = query.all()
     if not available:
         return jsonify({"game_over": True}), 404
 
-    card = random.choice(available)
+    scenario = random.choice(available)
     return jsonify({
-        "card_id": card.id,
-        "scenario_text": card.scenario_text,
-        "decision_a": card.decision_a,
-        "decision_b": card.decision_b
+        "scenario_id": scenario.id,
+        "scenario_text": scenario.scenario_text,
+        "decision_a": scenario.decision_a,
+        "decision_b": scenario.decision_b
     }), 200
 
 
@@ -151,27 +151,27 @@ def next_card():
 def submit_round():
     data = request.get_json()
     session_id = data.get('session_id')
-    card_id = data.get('card_id')
+    scenario_id = data.get('scenario_id')
     choice_made = data.get('choice_made', '').lower()
 
-    if not session_id or not card_id or choice_made not in ('a', 'b'):
-        return jsonify({"error": "session_id, card_id, and choice_made (a or b) are required"}), 400
+    if not session_id or not scenario_id or choice_made not in ('a', 'b'):
+        return jsonify({"error": "session_id, scenario_id, and choice_made (a or b) are required"}), 400
 
     session = GameSession.query.get(session_id)
-    card = Card.query.get(card_id)
+    scenario = Scenario.query.get(scenario_id)
 
-    if not session or not card:
-        return jsonify({"error": "Session or card not found"}), 404
+    if not session or not scenario:
+        return jsonify({"error": "Session or scenario not found"}), 404
 
     # Apply deltas
     if choice_made == 'a':
-        session.biosphere += card.a_biosphere
-        session.society   += card.a_society
-        session.economy   += card.a_economy
+        session.biosphere += scenario.a_biosphere
+        session.society   += scenario.a_society
+        session.economy   += scenario.a_economy
     else:
-        session.biosphere += card.b_biosphere
-        session.society   += card.b_society
-        session.economy   += card.b_economy
+        session.biosphere += scenario.b_biosphere
+        session.society   += scenario.b_society
+        session.economy   += scenario.b_economy
 
     # Clamp 0–100
     session.biosphere = max(0, min(100, session.biosphere))
@@ -182,7 +182,7 @@ def submit_round():
     round_count = GameRound.query.filter_by(session_id=session_id).count() + 1
     game_round = GameRound(
         session_id=session_id,
-        card_id=card_id,
+        scenario_id=scenario_id,
         choice_made=choice_made,
         biosphere_after=session.biosphere,
         society_after=session.society,

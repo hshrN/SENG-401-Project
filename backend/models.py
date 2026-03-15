@@ -43,8 +43,8 @@ class GameSession(db.Model):
         return f'<GameSession {self.id} - Player {self.player_id} - Status {self.status}>'
 
 
-class Card(db.Model):
-    __tablename__ = 'cards'
+class Scenario(db.Model):
+    __tablename__ = 'scenarios'
 
     id = db.Column(db.Integer, primary_key=True)
     scenario_text = db.Column(db.Text, nullable=False)
@@ -68,12 +68,12 @@ class Card(db.Model):
     phase = db.Column(db.String(20), default='early', nullable=False)  # 'early' or 'late' - for future two-phase system
 
     def __repr__(self):
-        return f'<Card {self.id} - {self.role_type} - Phase {self.phase}>'
+        return f'<Scenario {self.id} - {self.role_type} - Phase {self.phase}>'
 
 
 class GameRound(db.Model):
     """
-    Tracks each individual card played within a session.
+    Tracks each individual scenario played within a session.
     Replaces the old Choice model - stores both what was chosen
     and the resulting metric state after the choice.
     """
@@ -81,7 +81,7 @@ class GameRound(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     session_id = db.Column(db.Integer, db.ForeignKey('game_sessions.id'), nullable=False)
-    card_id = db.Column(db.Integer, db.ForeignKey('cards.id'), nullable=False)
+    scenario_id = db.Column(db.Integer, db.ForeignKey('scenarios.id'), nullable=False)
 
     # Which decision the player made
     choice_made = db.Column(db.String(1), nullable=False)  # 'a' or 'b'
@@ -93,8 +93,8 @@ class GameRound(db.Model):
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Relationship back to card
-    card = db.relationship('Card', backref='rounds', lazy=True)
+    # Relationship back to scenario
+    scenario = db.relationship('Scenario', backref='rounds', lazy=True)
 
     def __repr__(self):
-        return f'<GameRound {self.id} - Session {self.session_id} - Card {self.card_id} - Choice {self.choice_made}>'
+        return f'<GameRound {self.id} - Session {self.session_id} - Scenario {self.scenario_id} - Choice {self.choice_made}>'

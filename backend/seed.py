@@ -3,9 +3,9 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app import app
-from models import db, Card
+from models import db, Scenario
 
-cards = [
+scenarios = [
     {
         "scenario_text": "A developing nation requests debt relief to fund climate adaptation projects. Cancelling the debt would free up resources but strain international creditors.",
         "decision_a": "Cancel the debt unconditionally",
@@ -115,15 +115,15 @@ cards = [
 
 def seed():
     with app.app_context():
-        existing = Card.query.count()
+        existing = Scenario.query.count()
         if existing > 0:
-            print(f"Cards table already has {existing} rows. Skipping seed.")
+            print(f"Scenarios table already has {existing} rows. Skipping seed.")
             return
-        for data in cards:
-            card = Card(**data)
-            db.session.add(card)
+        for data in scenarios:
+            scenario = Scenario(**data)
+            db.session.add(scenario)
         db.session.commit()
-        print(f"✅ Seeded {len(cards)} cards successfully.")
+        print(f"✅ Seeded {len(scenarios)} scenarios successfully.")
 
 if __name__ == '__main__':
     seed()
