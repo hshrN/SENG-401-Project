@@ -1,0 +1,219 @@
+@keyframes fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animateFadeInDown {
+  animation: fade-in-down 0.8s ease-out forwards;
+}
+
+.animateFadeInUp {
+  animation: fade-in-up 0.8s ease-out forwards;
+  opacity: 0;
+}
+
+.animationDelay200 {
+  animation-delay: 0.2s;
+}
+
+.animationDelay400 {
+  animation-delay: 0.4s;
+}
+
+.animationDelay600 {
+  animation-delay: 0.6s;
+}
+
+.animationDelay800 {
+  animation-delay: 0.8s;
+}
+
+.shaderCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  touch-action: none;
+}
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.heroContent {
+  text-align: center;
+  max-width: 80rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.heroHeadline {
+  margin-bottom: 0.5rem;
+}
+
+.heroSubtitle {
+  max-width: 48rem;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 300;
+}
+
+@media (min-width: 768px) {
+  .heroSubtitle {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .heroSubtitle {
+    font-size: 1.5rem;
+  }
+}
+
+.ctaRow {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2.5rem;
+}
+
+@media (min-width: 640px) {
+  .ctaRow {
+    flex-direction: row;
+  }
+}
+
+.trustBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  margin-bottom: 2rem;
+  background: rgba(249, 115, 22, 0.1);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(253, 186, 116, 0.3);
+  border-radius: 9999px;
+  font-size: 0.875rem;
+}
+
+.trustBadgeIcons {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.trustBadgeText {
+  color: rgba(255, 237, 213, 1);
+}
+
+.btnPrimary {
+  padding: 1rem 2rem;
+  background: linear-gradient(to right, rgb(249, 115, 22), rgb(234, 179, 8));
+  color: black;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 1.125rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btnPrimary:hover {
+  background: linear-gradient(to right, rgb(234, 88, 12), rgb(202, 138, 4));
+  transform: scale(1.05);
+  box-shadow: 0 25px 50px -12px rgba(249, 115, 22, 0.25);
+}
+
+.btnSecondary {
+  padding: 1rem 2rem;
+  background: rgba(249, 115, 22, 0.1);
+  border: 1px solid rgba(253, 186, 116, 0.3);
+  color: rgba(255, 237, 213, 1);
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 1.125rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  backdrop-filter: blur(4px);
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btnSecondary:hover {
+  background: rgba(249, 115, 22, 0.2);
+  border-color: rgba(253, 186, 116, 0.5);
+  transform: scale(1.05);
+}
+
+.headlineLine1 {
+  font-size: 3rem;
+  font-weight: 700;
+  background: linear-gradient(to right, rgb(253, 186, 116), rgb(250, 204, 21), rgb(252, 211, 77));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@media (min-width: 768px) {
+  .headlineLine1 {
+    font-size: 4.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .headlineLine1 {
+    font-size: 5rem;
+  }
+}
+
+.headlineLine2 {
+  font-size: 3rem;
+  font-weight: 700;
+  background: linear-gradient(to right, rgb(253, 224, 71), rgb(251, 146, 60), rgb(248, 113, 113));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@media (min-width: 768px) {
+  .headlineLine2 {
+    font-size: 4.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .headlineLine2 {
+    font-size: 5rem;
+  }
+}

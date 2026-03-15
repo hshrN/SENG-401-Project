@@ -1,0 +1,107 @@
+.stage {
+  position: relative;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 320px;
+  min-height: 320px;
+}
+
+.center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.centerContent {
+  pointer-events: auto;
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Orbit in front of the card so scores appear around it; pointer-events: none so card stays clickable */
+.arm {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.orbitItem {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  will-change: transform;
+  transform-origin: center center;
+  /* translateY set inline from orbitRadius */
+  transform: translate(-50%, -50%);
+  min-width: 140px;
+}
+
+.orbitCard {
+  padding: 0.5rem 0.75rem;
+  background: var(--app-surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--app-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.orbitLabel {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--app-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.orbitRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.orbitValue {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--app-foreground);
+  flex-shrink: 0;
+}
+
+.orbitTrack {
+  height: 6px;
+  flex: 1;
+  min-width: 0;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.orbitFill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}
+
+.orbitFillHigh {
+  background: linear-gradient(90deg, #16a34a, var(--app-primary));
+}
+
+.orbitFillLow {
+  background: linear-gradient(90deg, #b91c1c, #f87171);
+}
