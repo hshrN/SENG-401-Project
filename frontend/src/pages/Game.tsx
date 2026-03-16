@@ -11,6 +11,7 @@ import { useAudio } from "../context/AudioContext";
 import { createSession, getNextCard, submitRound, type SessionResponse, type CardResponse } from "../application/gameService";
 import { getCardFaceIndex } from "../utils/cardFaceState";
 import { StateImageCarousel } from "../components/stateImageCarousel";
+import AudioControls from "../components/shared/AudioControls";
 
 /** Background mood from metrics: critical (red), warning (yellow), healthy (green) */
 function getBackgroundMood(biosphere: number, society: number, economy: number): "critical" | "warning" | "healthy" {
@@ -151,6 +152,7 @@ const Game = () => {
             {error && <p className={styles.error}>{error}</p>}
           </div>
         </div>
+        <AudioControls />
       </div>
     );
   }
@@ -178,6 +180,7 @@ const Game = () => {
             </button>
           </div>
         </div>
+        <AudioControls />
       </div>
     );
   }
@@ -236,6 +239,7 @@ const Game = () => {
         </div>
         {error && <p className={styles.error}>{error}</p>}
       </div>
+      <AudioControls />
     </div>
   );
 };
