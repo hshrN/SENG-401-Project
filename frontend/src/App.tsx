@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { AudioProvider } from "./context/AudioContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./pages/Home";
 import About from "./pages/About";
@@ -12,7 +13,8 @@ import SignUp from "./pages/SignUp";
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <AudioProvider>
+        <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
@@ -29,6 +31,7 @@ function App() {
           <Route path="/leaderboard" element={<Leaderboard />} />
         </Routes>
       </BrowserRouter>
+      </AudioProvider>
     </AuthProvider>
   );
 }
