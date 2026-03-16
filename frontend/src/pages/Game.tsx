@@ -7,6 +7,7 @@ import Card from "../components/card/Card";
 import { ScoreOrbit } from "../components/scoreOrbit";
 import GradientBackground from "../components/shared/GradientBackground";
 import { useAuth } from "../context/AuthContext";
+import { useAudio } from "../context/AudioContext";
 import { createSession, getNextCard, submitRound, type SessionResponse, type CardResponse } from "../application/gameService";
 import { getCardFaceIndex } from "../utils/cardFaceState";
 import { StateImageCarousel } from "../components/stateImageCarousel";
@@ -21,6 +22,7 @@ function getBackgroundMood(biosphere: number, society: number, economy: number):
 
 const Game = () => {
   const { user } = useAuth();
+  const { playSound } = useAudio();
 
   const [session, setSession] = useState<SessionResponse | null>(null);
   const [currentCard, setCurrentCard] = useState<CardResponse | null>(null);
@@ -42,6 +44,7 @@ const Game = () => {
   }, [session]);
 
   const handleStart = async () => {
+    playSound("button_click");
     const username = user?.username?.trim();
     if (!username) {
       setError("You must be logged in to start a game.");
@@ -99,6 +102,7 @@ const Game = () => {
   };
 
   const handleRestart = () => {
+    playSound("button_click");
     setSession(null);
     setCurrentCard(null);
     setGameOver(false);
