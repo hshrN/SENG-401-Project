@@ -10,6 +10,7 @@ import { useAuth } from "../context/AuthContext";
 import { createSession, getNextCard, submitRound, type SessionResponse, type CardResponse } from "../application/gameService";
 import { getCardFaceIndex } from "../utils/cardFaceState";
 import { StateImageCarousel } from "../components/stateImageCarousel";
+import { TutorialOverlay } from "../components/tutorial";
 
 /** Background mood from metrics: critical (red), warning (yellow), healthy (green) */
 function getBackgroundMood(biosphere: number, society: number, economy: number): "critical" | "warning" | "healthy" {
@@ -31,15 +32,26 @@ const Game = () => {
   const [society, setSociety] = useState(50);
   const [economy, setEconomy] = useState(50);
 
+  const [showTutorial, setShowTutorial] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [finalScore, setFinalScore] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (session) {
+      // Check if user has seen tutorial before fetching cards
+      const hasSeenTutorial = localStorage.getItem("hasSeenTutorial");
+      if (!hasSeenTutorial) {
+        setShowTutorial(true);
+      }
       fetchNextCard(session.session_id);
     }
   }, [session]);
+
+  const handleTutorialComplete = () => {
+    localStorage.setItem("hasSeenTutorial", "1");
+    setShowTutorial(false);
+  };
 
   const handleStart = async () => {
     const username = user?.username?.trim();
@@ -194,6 +206,9 @@ const Game = () => {
           aria-hidden
         />
       </AnimatePresence>
+
+      {showTutorial && <TutorialOverlay onComplete={handleTutorialComplete} />}
+
       <Link to="/" className={styles.backLink}>
         <ArrowLeft size={18} />
         Back to Home
@@ -218,7 +233,7 @@ const Game = () => {
                     decision_a={currentCard.decision_a}
                     decision_b={currentCard.decision_b}
                     onChoice={handleChoice}
-                    disabled={choiceDisabled}
+                    disabled={choiceDisabled || showTutorial}
                   />
                 )}
               </ScoreOrbit>
