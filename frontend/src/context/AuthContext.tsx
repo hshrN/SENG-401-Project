@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { loginRequest, signupRequest, LoginRequest, SignupRequest, User } from "../services/AuthService";
+import { login, signup, type LoginRequest, type SignupRequest, type User } from "../application/authService";
 
 type AuthContextType = {
   user: User | null;
@@ -42,13 +42,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     localStorage.setItem("user", JSON.stringify(user));
   };
 
-  const login = async (data: LoginRequest) => {
-    const result = await loginRequest(data);
+  const loginUser = async (data: LoginRequest) => {
+    const result = await login(data);
     handleAuthSuccess(result.user);
   };
 
-  const signup = async (data: SignupRequest) => {
-    const result = await signupRequest(data);
+  const signupUser = async (data: SignupRequest) => {
+    const result = await signup(data);
     handleAuthSuccess(result.user);
   };
 
@@ -61,8 +61,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     user,
     isLoggedIn: !!user,
     isLoading,
-    login,
-    signup,
+    login: loginUser,
+    signup: signupUser,
     logout,
   };
 

@@ -16,28 +16,53 @@
 ## Project Structure
 
 ```
-SENG-401-Project-1/
-├── backend/                    # Flask API
-│   ├── app.py                 # Flask app, routes (auth, sessions, scenarios, rounds)
-│   ├── models.py               # Database models (Player, GameSession, Scenario, GameRound)
-│   ├── seed.py                 # Seeds test users and scenarios
-│   ├── migrations/             # Database schema versions (Flask-Migrate)
-│   ├── venv/                   # Python virtual environment (don't commit)
-│   ├── requirements.txt        # Python dependencies
-│   ├── .env.example            # Template for environment variables
-│   ├── .env                    # Local config (don't commit)
+SENG-401-Project/
+├── backend/                         # Flask API (layered)
+│   ├── app.py                       # Presentation: API routes only
+│   ├── application/                 # Application: use cases (auth, session, scenario, round)
+│   ├── domain/                      # Domain: game rules, no I/O
+│   ├── infrastructure/             # Infrastructure: (optional extras)
+│   ├── models.py                    # Infrastructure: DB models
+│   ├── seed.py                      # Seeds test users and scenarios
+│   ├── migrations/                  # Database schema versions (Flask-Migrate)
+│   ├── venv/                        # Python virtual environment (don't commit)
+│   ├── requirements.txt
+│   ├── .env.example
+│   ├── .env                         # Local config (don't commit)
 │   └── .gitignore
 │
-├── frontend/                   # React TypeScript app
-│   ├── src/                    # React components, pages, services
-│   ├── public/                 # Static assets
-│   ├── package.json            # Node dependencies
-│   ├── tsconfig.json           # TypeScript config
+├── frontend/                        # React TypeScript app (layered)
+│   ├── src/
+│   │   ├── application/             # Application: auth & game use cases
+│   │   ├── domain/                  # Domain: shared types
+│   │   ├── infrastructure/api/      # Infrastructure: HTTP client to backend
+│   │   ├── pages/                   # Presentation: pages
+│   │   ├── components/              # Presentation: UI components
+│   │   ├── context/                 # Presentation: UI state (e.g. auth)
+│   │   ├── lib/
+│   │   ├── App.tsx
+│   │   └── index.tsx
+│   ├── public/
+│   ├── package.json
+│   ├── tsconfig.json
 │   └── .gitignore
 │
-├── .gitignore                  # Global Git rules
-└── README.md                   # This file
+├── .gitignore
+└── README.md
 ```
+
+## Layered architecture
+
+The codebase is split into four layers; **dependencies point inward** (outer layers call inner ones; domain and infrastructure do not depend on UI or routes).
+
+| Layer | Role | Lives in |
+|-------|------|----------|
+| **Presentation** | UI and API entry only: parse input, call application, return response. No business logic. | Backend: `app.py`. Frontend: `pages/`, `components/`, `context/`. |
+| **Application** | Use cases and orchestration: auth, sessions, scenarios, rounds. Calls domain + infrastructure. | Backend: `application/`. Frontend: `application/`. |
+| **Domain** | Core rules and types only. No Flask, SQLAlchemy, fetch, or I/O. | Backend: `domain/` (e.g. `game.py`). Frontend: `domain/` (e.g. `types.ts`). |
+| **Infrastructure** | External I/O: DB (e.g. `models.py`), HTTP client (`infrastructure/api/`), password hashing. | Backend: `models.py`, infra in `app.py`. Frontend: `infrastructure/api/`. |
+
+**Rule:** Presentation → Application → Domain; Application and Infrastructure both depend on Domain. UI and routes call the application layer only; they do not call the API client or DB directly.
 
 ## Prerequisites
 
