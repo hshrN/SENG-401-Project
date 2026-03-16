@@ -23,7 +23,7 @@ function getBackgroundMood(biosphere: number, society: number, economy: number):
 
 const Game = () => {
   const { user } = useAuth();
-  const { playSound } = useAudio();
+  const { playSound, startBgm, stopBgm, setBgmSpeed } = useAudio();
 
   const [session, setSession] = useState<SessionResponse | null>(null);
   const [currentCard, setCurrentCard] = useState<CardResponse | null>(null);
@@ -41,11 +41,34 @@ const Game = () => {
   useEffect(() => {
     if (session) {
       fetchNextCard(session.session_id);
+    } else {
+      stopBgm(); // Stop backgound music when session is cleared
     }
   }, [session]);
 
+  // Handle Dynamic Background Music Speed
+  useEffect(() => {
+    if (session && !gameOver) {
+      const minMetric = Math.min(biosphere, society, economy);
+      let targetSpeed: 1 | 2 | 4 | 8 = 1;
+      
+      if (minMetric < 10) targetSpeed = 8;
+      else if (minMetric < 25) targetSpeed = 4;
+      else if (minMetric < 40) targetSpeed = 2;
+      
+      setBgmSpeed(targetSpeed);
+    }
+  }, [biosphere, society, economy, session, gameOver, setBgmSpeed]);
+
+  // Stop BGM if we unmount
+  useEffect(() => {
+    return () => {
+      stopBgm();
+    };
+  }, [stopBgm]);
+
   const handleStart = async () => {
-    playSound("button_click");
+    playSound("game_start");
     const username = user?.username?.trim();
     if (!username) {
       setError("You must be logged in to start a game.");
@@ -59,6 +82,7 @@ const Game = () => {
       setBiosphere(newSession.biosphere);
       setSociety(newSession.society);
       setEconomy(newSession.economy);
+      startBgm();
     } catch (err: unknown) {
       setError((err as Error).message);
     } finally {
@@ -75,6 +99,7 @@ const Game = () => {
       setChoiceDisabled(false);
     } catch {
       setGameOver(true);
+      stopBgm();
     } finally {
       setIsLoading(false);
     }
@@ -93,6 +118,7 @@ const Game = () => {
       if (result.game_over) {
         setGameOver(true);
         setFinalScore(result.final_score ?? null);
+        stopBgm();
       } else {
         fetchNextCard(session.session_id);
       }

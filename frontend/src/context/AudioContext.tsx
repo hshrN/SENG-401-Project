@@ -8,6 +8,9 @@ type AudioContextType = {
   setMusicVolume: (volume: number) => void;
   setSfxVolume: (volume: number) => void;
   playSound: (soundName: string) => void;
+  startBgm: () => void;
+  stopBgm: () => void;
+  setBgmSpeed: (speed: 1 | 2 | 4 | 8) => void;
 };
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
@@ -29,8 +32,11 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
   const [musicVolume, setMusicVolumeState] = useState<number>(1);
   const [sfxVolume, setSfxVolumeState] = useState<number>(1);
 
-  // References to keep track of loaded sounds
   const soundsRef = useRef<{ [key: string]: HTMLAudioElement }>({});
+  
+  // Track active BGM speed to ensure we only switch when necessary
+  const activeBgmSpeedRef = useRef<1 | 2 | 4 | 8 | null>(null);
+  const isBgmPlayingRef = useRef<boolean>(false);
 
   const loadPreferences = () => {
     const savedMute = localStorage.getItem('audio_isMuted');
@@ -49,6 +55,16 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
     // Preload basic SFX - taking into account the new path: frontend/public/assets/button_click_1.mp3
     const clickSound = new Audio('/assets/button_click_1.mp3');
     soundsRef.current['button_click'] = clickSound;
+
+    const gameStartSound = new Audio('/assets/game_start_1.mp3');
+    soundsRef.current['game_start'] = gameStartSound;
+
+    // Preload looping BGM tracks
+    [1, 2, 4, 8].forEach((speed) => {
+      const bgmSound = new Audio(`/assets/music_speed_${speed}.mp3`);
+      bgmSound.loop = true;
+      soundsRef.current[`bgm_${speed}`] = bgmSound;
+    });
   }, []);
 
   const toggleMute = () => {
@@ -60,6 +76,11 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
   const setMusicVolume = (volume: number) => {
     setMusicVolumeState(volume);
     localStorage.setItem('audio_musicVolume', String(volume));
+    // Apply actively
+    if (activeBgmSpeedRef.current) {
+      const currentTrack = soundsRef.current[`bgm_${activeBgmSpeedRef.current}`];
+      if (currentTrack) currentTrack.volume = volume;
+    }
   };
 
   const setSfxVolume = (volume: number) => {
@@ -81,6 +102,73 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
     }
   };
 
+  const startBgm = () => {
+    if (isBgmPlayingRef.current) return;
+    isBgmPlayingRef.current = true;
+    const initialSpeed = 1;
+    activeBgmSpeedRef.current = initialSpeed;
+    
+    if (isMuted) return;
+
+    const track = soundsRef.current[`bgm_${initialSpeed}`];
+    if (track) {
+      track.volume = musicVolume;
+      track.currentTime = 0;
+      track.play().catch(err => console.log('BGM play failed:', err));
+    }
+  };
+
+  const stopBgm = () => {
+    isBgmPlayingRef.current = false;
+    if (activeBgmSpeedRef.current) {
+      const track = soundsRef.current[`bgm_${activeBgmSpeedRef.current}`];
+      if (track) {
+        track.pause();
+        track.currentTime = 0;
+      }
+    }
+    activeBgmSpeedRef.current = null;
+  };
+
+  const setBgmSpeed = (speed: 1 | 2 | 4 | 8) => {
+    // Only switch if we are playing and moving to a new speed
+    if (!isBgmPlayingRef.current || activeBgmSpeedRef.current === speed) return;
+
+    const oldTrackKey = `bgm_${activeBgmSpeedRef.current}`;
+    const newTrackKey = `bgm_${speed}`;
+
+    const oldTrack = soundsRef.current[oldTrackKey];
+    const newTrack = soundsRef.current[newTrackKey];
+
+    if (oldTrack && newTrack) {
+      // Synchronize playheads
+      const currentTime = oldTrack.currentTime;
+      oldTrack.pause();
+      
+      newTrack.currentTime = currentTime;
+      if (!isMuted) {
+        newTrack.volume = musicVolume;
+        newTrack.play().catch(err => console.log('BGM switch play failed:', err));
+      }
+      activeBgmSpeedRef.current = speed;
+    }
+  };
+
+  // React to mute toggle mid-game for BGM
+  useEffect(() => {
+    if (activeBgmSpeedRef.current) {
+      const track = soundsRef.current[`bgm_${activeBgmSpeedRef.current}`];
+      if (track) {
+        if (isMuted) {
+          track.pause();
+        } else if (isBgmPlayingRef.current) {
+          track.volume = musicVolume;
+          track.play().catch(err => console.log('BGM un-mute play failed:', err));
+        }
+      }
+    }
+  }, [isMuted, musicVolume]);
+
   return (
     <AudioContext.Provider
       value={{
@@ -91,6 +179,9 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
         setMusicVolume,
         setSfxVolume,
         playSound,
+        startBgm,
+        stopBgm,
+        setBgmSpeed,
       }}
     >
       {children}
