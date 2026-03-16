@@ -11,6 +11,7 @@ import { useAudio } from "../context/AudioContext";
 import { createSession, getNextCard, submitRound, type SessionResponse, type CardResponse } from "../application/gameService";
 import { getCardFaceIndex } from "../utils/cardFaceState";
 import { StateImageCarousel } from "../components/stateImageCarousel";
+import { TutorialOverlay } from "../components/tutorial";
 import AudioControls from "../components/shared/AudioControls";
 
 /** Background mood from metrics: critical (red), warning (yellow), healthy (green) */
@@ -72,6 +73,11 @@ const Game = () => {
       stopBgm();
     };
   }, [stopBgm]);
+
+  const handleTutorialComplete = () => {
+    localStorage.setItem("hasSeenTutorial", "1");
+    setShowTutorial(false);
+  };
 
   const handleStart = async () => {
     playSound("game_start");
