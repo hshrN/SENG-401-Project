@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, ReactNode } from "react";
 import styles from "./Hero.module.css";
+import { useAudio } from "../../context/AudioContext";
 
 const defaultShaderSource = `#version 300 es
 precision highp float;
@@ -358,6 +359,7 @@ const Hero: React.FC<HeroProps> = ({
 }) => {
   const tint = palette?.tint ?? DEFAULT_TINT;
   const canvasRef = useShaderBackground(tint);
+  const { playSound } = useAudio();
 
   return (
     <div className={`relative w-full h-screen overflow-hidden bg-black ${className}`}>
@@ -389,22 +391,22 @@ const Hero: React.FC<HeroProps> = ({
             <div className={`${styles.ctaRow} ${styles.animateFadeInUp} ${styles.animationDelay800}`}>
               {buttons.primary && (
                 buttons.primary.href ? (
-                  <a href={buttons.primary.href} className={styles.btnPrimary}>
+                  <a href={buttons.primary.href} className={styles.btnPrimary} onClick={() => playSound("button_click")}>
                     {buttons.primary.text}
                   </a>
                 ) : (
-                  <button type="button" onClick={buttons.primary.onClick} className={styles.btnPrimary}>
+                  <button type="button" onClick={() => { playSound("button_click"); buttons.primary?.onClick?.(); }} className={styles.btnPrimary}>
                     {buttons.primary.text}
                   </button>
                 )
               )}
               {buttons.secondary && (
                 buttons.secondary.href ? (
-                  <a href={buttons.secondary.href} className={styles.btnSecondary}>
+                  <a href={buttons.secondary.href} className={styles.btnSecondary} onClick={() => playSound("button_click")}>
                     {buttons.secondary.text}
                   </a>
                 ) : (
-                  <button type="button" onClick={buttons.secondary.onClick} className={styles.btnSecondary}>
+                  <button type="button" onClick={() => { playSound("button_click"); buttons.secondary?.onClick?.(); }} className={styles.btnSecondary}>
                     {buttons.secondary.text}
                   </button>
                 )

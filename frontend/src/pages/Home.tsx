@@ -3,13 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Hero, { HERO_PALETTES } from "../components/hero/Hero";
 import { Star, Globe, Target } from "lucide-react";
+import AudioControls from "../components/shared/AudioControls";
 
 const Home = () => {
   const { isLoggedIn, logout, user } = useAuth();
   const navigate = useNavigate();
 
   return (
-    <Hero
+    <>
+      <Hero
       palette={{ tint: HERO_PALETTES.green }}
       trustBadge={{
         text: "SDG 17: Partnership for the Goals",
@@ -40,8 +42,10 @@ const Home = () => {
               text: "Login",
               onClick: () => navigate("/login"),
             },
-      }}
-    />
+        }}
+      />
+      <AudioControls />
+    </>
   );
 };
 
