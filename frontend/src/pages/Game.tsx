@@ -1,12 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import styles from "./Game.module.css";
 import Card from "../components/card/Card";
 import { ScoreOrbit } from "../components/scoreOrbit";
 import GradientBackground from "../components/shared/GradientBackground";
 import { useAuth } from "../context/AuthContext";
 import { createSession, getNextCard, submitRound, type SessionResponse, type CardResponse } from "../application/gameService";
+import { getCardFaceIndex } from "../utils/cardFaceState";
+import { StateImageCarousel } from "../components/stateImageCarousel";
+
+/** Background mood from metrics: critical (red), warning (yellow), healthy (green) */
+function getBackgroundMood(biosphere: number, society: number, economy: number): "critical" | "warning" | "healthy" {
+  const min = Math.min(biosphere, society, economy);
+  if (min <= 30) return "critical";
+  if (min <= 45) return "warning";
+  return "healthy";
+}
 
 const Game = () => {
   const { user } = useAuth();
@@ -167,35 +178,57 @@ const Game = () => {
     );
   }
 
+  const backgroundMood = getBackgroundMood(biosphere, society, economy);
+
   return (
     <div className={styles.container}>
       <GradientBackground idPrefix="game" />
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={backgroundMood}
+          className={`${styles.stateOverlay} ${styles[`stateOverlay${backgroundMood.charAt(0).toUpperCase() + backgroundMood.slice(1)}`]}`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.55, ease: "easeInOut" }}
+          aria-hidden
+        />
+      </AnimatePresence>
       <Link to="/" className={styles.backLink}>
         <ArrowLeft size={18} />
         Back to Home
       </Link>
       <div className={styles.content}>
         <div className={styles.scenarioWrap}>
-          <ScoreOrbit
-            items={[
-              { id: 1, name: "Biosphere", value: biosphere },
-              { id: 2, name: "Society", value: society },
-              { id: 3, name: "Economy", value: economy },
-            ]}
-            stageSize={800}
-            orbitRadius={360}
-          >
-            {isLoading && <p className={styles.loading}>Loading...</p>}
-            {currentCard && (
-              <Card
-                scenario_text={currentCard.scenario_text}
-                decision_a={currentCard.decision_a}
-                decision_b={currentCard.decision_b}
-                onChoice={handleChoice}
-                disabled={choiceDisabled}
+          <div className={styles.centerRow}>
+            <div className={styles.scenarioCardCol}>
+              <ScoreOrbit
+                items={[
+                  { id: 1, name: "Biosphere", value: biosphere },
+                  { id: 2, name: "Society", value: society },
+                  { id: 3, name: "Economy", value: economy },
+                ]}
+                stageSize={800}
+                orbitRadius={360}
+              >
+                {isLoading && <p className={styles.loading}>Loading...</p>}
+                {currentCard && (
+                  <Card
+                    scenario_text={currentCard.scenario_text}
+                    decision_a={currentCard.decision_a}
+                    decision_b={currentCard.decision_b}
+                    onChoice={handleChoice}
+                    disabled={choiceDisabled}
+                  />
+                )}
+              </ScoreOrbit>
+            </div>
+            <div className={styles.cardFaceCol} aria-hidden>
+              <StateImageCarousel
+                activeIndex={getCardFaceIndex(biosphere, society, economy)}
               />
-            )}
-          </ScoreOrbit>
+            </div>
+          </div>
         </div>
         {error && <p className={styles.error}>{error}</p>}
       </div>
