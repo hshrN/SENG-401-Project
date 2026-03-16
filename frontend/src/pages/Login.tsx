@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { motion, useInView } from "framer-motion";
 import { User, Lock, Eye, EyeOff, ArrowRight, ArrowLeft } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useAudio } from "../context/AudioContext";
 import { cn } from "../lib/utils";
 import styles from "./Login.module.css";
 
@@ -93,9 +94,11 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { playSound } = useAudio();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    playSound("button_click");
     setMessage("");
     if (!username.trim()) {
       setMessage("Please enter a username");
@@ -169,7 +172,7 @@ const Login = () => {
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={() => { playSound("button_click"); setShowPassword(!showPassword); }}
                     className={styles.togglePassword}
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
