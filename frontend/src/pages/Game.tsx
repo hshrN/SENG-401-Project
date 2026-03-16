@@ -11,7 +11,6 @@ import { useAudio } from "../context/AudioContext";
 import { createSession, getNextCard, submitRound, type SessionResponse, type CardResponse } from "../application/gameService";
 import { getCardFaceIndex } from "../utils/cardFaceState";
 import { StateImageCarousel } from "../components/stateImageCarousel";
-import { TutorialOverlay } from "../components/tutorial";
 import AudioControls from "../components/shared/AudioControls";
 
 /** Background mood from metrics: critical (red), warning (yellow), healthy (green) */
@@ -49,27 +48,25 @@ const Game = () => {
       }
       fetchNextCard(session.session_id);
     } else {
-      stopBgm();
+      stopBgm(); // Stop backgound music when session is cleared
     }
   }, [session]);
 
-  const handleTutorialComplete = () => {
-    localStorage.setItem("hasSeenTutorial", "1");
-    setShowTutorial(false);
-  };
-
-  // Dynamic BGM speed based on lowest metric
+  // Handle Dynamic Background Music Speed
   useEffect(() => {
     if (session && !gameOver) {
       const minMetric = Math.min(biosphere, society, economy);
       let targetSpeed: 1 | 2 | 4 | 8 = 1;
+      
       if (minMetric < 10) targetSpeed = 8;
       else if (minMetric < 25) targetSpeed = 4;
       else if (minMetric < 40) targetSpeed = 2;
+      
       setBgmSpeed(targetSpeed);
     }
   }, [biosphere, society, economy, session, gameOver, setBgmSpeed]);
 
+  // Stop BGM if we unmount
   useEffect(() => {
     return () => {
       stopBgm();
