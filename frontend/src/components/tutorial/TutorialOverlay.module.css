@@ -1,0 +1,118 @@
+.overlayOverlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 1rem;
+}
+
+.tutorialCard {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 1.25rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+  width: 100%;
+  max-width: 450px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.progressContainer {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.5rem 1.5rem 0.5rem;
+}
+
+.progressDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--app-border);
+  transition: all 0.3s ease;
+}
+
+.activeDot {
+  background-color: var(--app-primary);
+  transform: scale(1.25);
+}
+
+.completedDot {
+  background-color: var(--app-primary);
+  opacity: 0.6;
+}
+
+.stepContent {
+  padding: 1rem 2rem 2rem;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--app-foreground);
+  margin: 0 0 1rem 0;
+  text-align: center;
+}
+
+.body {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--app-muted);
+  text-align: center;
+}
+
+.body p {
+  margin: 0 0 0.75rem 0;
+}
+
+.body p:last-child {
+  margin: 0;
+}
+
+.body strong {
+  color: var(--app-foreground);
+  font-weight: 600;
+}
+
+.footer {
+  padding: 1rem 2rem 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.actionBtn {
+  background: var(--app-primary);
+  color: #052e16; /* Dark green for contrast on green btn */
+  border: none;
+  padding: 0.625rem 1.25rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  width: 100%;
+  justify-content: center;
+}
+
+.actionBtn:hover {
+  background: var(--app-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.25);
+}
+
+.actionBtn:active {
+  transform: translateY(0);
+}

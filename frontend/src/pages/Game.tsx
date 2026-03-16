@@ -34,12 +34,18 @@ const Game = () => {
   const [society, setSociety] = useState(50);
   const [economy, setEconomy] = useState(50);
 
+  const [showTutorial, setShowTutorial] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [finalScore, setFinalScore] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (session) {
+      // Check if user has seen tutorial before fetching cards
+      const hasSeenTutorial = localStorage.getItem("hasSeenTutorial");
+      if (!hasSeenTutorial) {
+        setShowTutorial(true);
+      }
       fetchNextCard(session.session_id);
     } else {
       stopBgm(); // Stop backgound music when session is cleared
@@ -227,6 +233,9 @@ const Game = () => {
           aria-hidden
         />
       </AnimatePresence>
+
+      {showTutorial && <TutorialOverlay onComplete={handleTutorialComplete} />}
+
       <Link to="/" className={styles.backLink}>
         <ArrowLeft size={18} />
         Back to Home
@@ -251,7 +260,7 @@ const Game = () => {
                     decision_a={currentCard.decision_a}
                     decision_b={currentCard.decision_b}
                     onChoice={handleChoice}
-                    disabled={choiceDisabled}
+                    disabled={choiceDisabled || showTutorial}
                   />
                 )}
               </ScoreOrbit>

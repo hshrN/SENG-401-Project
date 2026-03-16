@@ -49,7 +49,6 @@ const AudioControls = () => {
         onClick={() => {
           toggleMute();
           if (isMuted) {
-            // Give context state a tiny tick to update before playing the test sound
             setTimeout(() => playSound('button_click'), 50);
           }
         }}

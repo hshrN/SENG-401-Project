@@ -34,7 +34,6 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
 
   const soundsRef = useRef<{ [key: string]: HTMLAudioElement }>({});
   
-  // Track active BGM speed to ensure we only switch when necessary
   const activeBgmSpeedRef = useRef<1 | 2 | 4 | 8 | null>(null);
   const isBgmPlayingRef = useRef<boolean>(false);
 
@@ -52,14 +51,12 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
   useEffect(() => {
     loadPreferences();
 
-    // Preload basic SFX - taking into account the new path: frontend/public/assets/button_click_1.mp3
     const clickSound = new Audio('/assets/button_click_1.mp3');
     soundsRef.current['button_click'] = clickSound;
 
     const gameStartSound = new Audio('/assets/game_start_1.mp3');
     soundsRef.current['game_start'] = gameStartSound;
 
-    // Preload looping BGM tracks
     [1, 2, 4, 8].forEach((speed) => {
       const bgmSound = new Audio(`/assets/music_speed_${speed}.mp3`);
       bgmSound.loop = true;
@@ -76,7 +73,6 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
   const setMusicVolume = (volume: number) => {
     setMusicVolumeState(volume);
     localStorage.setItem('audio_musicVolume', String(volume));
-    // Apply actively
     if (activeBgmSpeedRef.current) {
       const currentTrack = soundsRef.current[`bgm_${activeBgmSpeedRef.current}`];
       if (currentTrack) currentTrack.volume = volume;
@@ -93,7 +89,6 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
 
     const sound = soundsRef.current[soundName];
     if (sound) {
-      // Clone node to allow overlapping playback (e.g., rapid clicks)
       const clonedSound = sound.cloneNode() as HTMLAudioElement;
       clonedSound.volume = sfxVolume;
       clonedSound.play().catch((err) => console.log('Audio play failed:', err));
@@ -131,7 +126,6 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
   };
 
   const setBgmSpeed = (speed: 1 | 2 | 4 | 8) => {
-    // Only switch if we are playing and moving to a new speed
     if (!isBgmPlayingRef.current || activeBgmSpeedRef.current === speed) return;
 
     const oldTrackKey = `bgm_${activeBgmSpeedRef.current}`;
@@ -141,7 +135,6 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
     const newTrack = soundsRef.current[newTrackKey];
 
     if (oldTrack && newTrack) {
-      // Synchronize playheads
       const currentTime = oldTrack.currentTime;
       oldTrack.pause();
       
@@ -154,7 +147,6 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
     }
   };
 
-  // React to mute toggle mid-game for BGM
   useEffect(() => {
     if (activeBgmSpeedRef.current) {
       const track = soundsRef.current[`bgm_${activeBgmSpeedRef.current}`];
