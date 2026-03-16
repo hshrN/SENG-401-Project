@@ -6,7 +6,7 @@ import Card from "../components/card/Card";
 import { ScoreOrbit } from "../components/scoreOrbit";
 import GradientBackground from "../components/shared/GradientBackground";
 import { useAuth } from "../context/AuthContext";
-import { createSession, getNextCard, submitRound, SessionResponse, CardResponse } from "../services/GameService";
+import { createSession, getNextCard, submitRound, type SessionResponse, type CardResponse } from "../application/gameService";
 
 const Game = () => {
   const { user } = useAuth();
