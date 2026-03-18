@@ -267,7 +267,7 @@ Visit http://localhost:3000. Log in with a test account, then go to Play and cli
 
 **app.py**
 - Configures Flask, CORS, and the database from `DATABASE_URL` in `.env`.
-- Routes: `/api/health`, `POST /login`, `POST /signup`, `POST /api/sessions`, `GET /api/scenarios/next`, `POST /api/rounds`.
+- Routes: `/api/health`, `POST /api/login`, `POST /api/signup`, `POST /api/sessions`, `GET /api/scenarios/next`, `POST /api/rounds`. `GET /api/leaderboard`
 
 **models.py**
 - **Player:** username, password_hash.
