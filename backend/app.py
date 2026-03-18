@@ -17,6 +17,7 @@ from application.auth_service import auth_login, auth_signup, AuthError
 from application.session_service import session_create, SessionError
 from application.scenario_service import scenario_get_next, ScenarioError
 from application.round_service import round_submit, RoundError
+from application.leaderboard_service import get_leaderboard, LeaderboardError
 
 load_dotenv()
 
@@ -47,7 +48,7 @@ def health():
 
 
 # --- Auth (presentation: parse JSON → application → JSON response) ---
-@app.route("/login", methods=["POST"])
+@app.route("/api/login", methods=["POST"])
 def login():
     data = request.get_json() or {}
     username = (data.get("username") or "").strip()
@@ -60,7 +61,7 @@ def login():
         return jsonify({"message": e.message}), e.status_code
 
 
-@app.route("/signup", methods=["POST"])
+@app.route("/api/signup", methods=["POST"])
 def signup():
     data = request.get_json() or {}
     username = (data.get("username") or "").strip()
@@ -115,6 +116,18 @@ def submit_round():
     except RoundError as e:
         return jsonify({"error": e.message}), e.status_code
 
+@app.route("/api/leaderboard", methods = ["GET"])
+def leaderboard():
+    limit = request.args.get("limit", default=10, type=int)
+    offset = request.args.get("offset", default=0, type=int)
+    period = request.args.get("period", default="all-time", type=str)
+    user_id = request.args.get("user_id", default=-1, type=int)
+
+    try: 
+        result = get_leaderboard(limit, offset, period, user_id)
+        return jsonify(result), 200
+    except LeaderboardError as e:
+        return jsonify({"error": e.message}), e.status_code
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001)

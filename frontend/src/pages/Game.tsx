@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import styles from "./Game.module.css";
@@ -39,6 +39,8 @@ const Game = () => {
   const [gameOver, setGameOver] = useState(false);
   const [finalScore, setFinalScore] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (session) {
@@ -215,6 +217,11 @@ const Game = () => {
             </div>
             <button type="button" className={styles.primaryBtn} onClick={handleRestart}>
               Play Again
+            </button>
+            <button type="button" className={styles.secondaryBtn} onClick={() => {
+              playSound("button_click");
+              navigate("/leaderboard")}}>
+              View Leaderboard
             </button>
           </div>
         </div>

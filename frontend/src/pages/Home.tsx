@@ -42,6 +42,10 @@ const Home = () => {
               text: "Login",
               onClick: () => navigate("/login"),
             },
+        tertiary: {
+          text: "Leaderboard",
+          onClick: () => navigate("/leaderboard"),
+        }
         }}
       />
       <AudioControls />

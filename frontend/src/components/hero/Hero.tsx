@@ -83,6 +83,11 @@ export interface HeroProps {
       onClick?: () => void;
       href?: string;
     };
+    tertiary?: {
+      text: string;
+      onClick?: () => void;
+      href?: string;
+    };
   };
   className?: string;
   /** RGB 0–1. Background tint (default: orange/amber). */
@@ -397,6 +402,17 @@ const Hero: React.FC<HeroProps> = ({
                 ) : (
                   <button type="button" onClick={() => { playSound("button_click"); buttons.primary?.onClick?.(); }} className={styles.btnPrimary}>
                     {buttons.primary.text}
+                  </button>
+                )
+              )}
+              {buttons.tertiary && (
+                buttons.tertiary.href ? (
+                  <a href={buttons.tertiary.href} className={styles.btnSecondary} onClick={() => playSound("button_click")}>
+                    {buttons.tertiary.text}
+                  </a>
+                ) : (
+                  <button type="button" onClick={() => { playSound("button_click"); buttons.tertiary?.onClick?.(); }} className={styles.btnSecondary}>
+                    {buttons.tertiary.text}
                   </button>
                 )
               )}

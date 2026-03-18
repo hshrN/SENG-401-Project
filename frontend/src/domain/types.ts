@@ -45,3 +45,33 @@ export type RoundResponse = {
   game_over: boolean;
   final_score?: number;
 };
+
+export type LeaderboardResponse = {
+  metadata: {
+    total_entries: number;
+    limit: number;
+    offset: number;
+  };
+  entries: {
+    rank: number;
+    username: string;
+    score: number;
+    achieved_at: string;
+    is_user_score: boolean;
+  }[];
+};
+
+export type LeaderboardRequest = {
+  limit: number;
+  offset: number;
+  period: string;
+  user_id: number
+}
+
+export type leaderboardEntry = {
+  rank: number;
+  username: string;
+  score: number;
+  achieved_at: string;
+  is_user_score: boolean;
+}
