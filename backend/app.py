@@ -48,7 +48,7 @@ def health():
 
 
 # --- Auth (presentation: parse JSON → application → JSON response) ---
-@app.route("/login", methods=["POST"])
+@app.route("/api/login", methods=["POST"])
 def login():
     data = request.get_json() or {}
     username = (data.get("username") or "").strip()
@@ -61,7 +61,7 @@ def login():
         return jsonify({"message": e.message}), e.status_code
 
 
-@app.route("/signup", methods=["POST"])
+@app.route("/api/signup", methods=["POST"])
 def signup():
     data = request.get_json() or {}
     username = (data.get("username") or "").strip()

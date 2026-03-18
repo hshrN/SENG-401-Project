@@ -7,7 +7,7 @@ import type { LoginRequest, SignupRequest, AuthSuccessResponse } from "../../dom
 import { apiFetch } from "./client";
 
 export async function loginRequest(data: LoginRequest): Promise<AuthSuccessResponse> {
-  const response = await apiFetch("/login", {
+  const response = await apiFetch("/api/login", {
     method: "POST",
     body: JSON.stringify(data),
   });
@@ -19,7 +19,7 @@ export async function loginRequest(data: LoginRequest): Promise<AuthSuccessRespo
 }
 
 export async function signupRequest(data: SignupRequest): Promise<AuthSuccessResponse> {
-  const response = await apiFetch("/signup", {
+  const response = await apiFetch("/api/signup", {
     method: "POST",
     body: JSON.stringify(data),
   });
