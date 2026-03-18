@@ -54,7 +54,7 @@ def get_leaderboard(limit, offset, period, user_id):
             "rank": offset + i + 1,
             "username": player.username,
             "score": session.final_score,
-            "achieved_at": session.ended_at.isoformat(),
+            "achieved_at": session.ended_at.isoformat() + "Z",
             "is_user_score": player.id == user_id
         })
     return {

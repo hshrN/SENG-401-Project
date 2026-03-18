@@ -70,7 +70,18 @@ const Leaderboard = () => {
       header: "Achieved",
       accessorKey: "achieved_at",
       cell: ({ getValue }) =>
-        new Date(getValue<string>()).toLocaleDateString(),
+        // new Date(getValue<string>()).toLocaleDateString(undefined, {
+        //   year: "numeric",
+        //   month: "short",
+        //   day: "numeric",
+        // })
+        new Date(getValue<string>()).toLocaleString(undefined, {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+        })
     },
   ];
 
