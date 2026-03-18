@@ -4,8 +4,9 @@ Uses infrastructure (Scenario, GameRound, db).
 """
 
 import random
-from models import Scenario, GameRound, db
-
+from models import Scenario, GameRound, GameSession, db
+from domain.game import compute_final_score
+from datetime import datetime
 
 class ScenarioError(Exception):
     """Raised when scenario request is invalid or no scenarios left."""
@@ -36,6 +37,15 @@ def scenario_get_next(session_id: int) -> dict | None:
     available = query.all()
 
     if not available:
+        session = GameSession.query.get(session_id)
+        round_count = GameRound.query.filter_by(session_id=session_id).count()
+
+        session.status = "ended"
+        session.ended_at = datetime.utcnow()
+        session.final_score = compute_final_score(session.biosphere, session.society, session.economy, round_count)
+
+        db.session.commit()
+
         return None  # game over
 
     scenario = random.choice(available)
