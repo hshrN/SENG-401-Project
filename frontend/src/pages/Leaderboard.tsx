@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useReactTable, getCoreRowModel, flexRender, ColumnDef } from "@tanstack/react-table";
-import { Trophy, ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Trophy } from "lucide-react";
 import GradientBackground from "../components/shared/GradientBackground";
 import styles from "./Leaderboard.module.css";
 import { useAuth } from "../context/AuthContext";
 import { useAudio } from "../context/AudioContext";
 import { getLeaderboard, LeaderboardResponse, leaderboardEntry } from "../application/leaderboardService";
+import GlobalNav from "../components/shared/GlobalNav";
 
 const Leaderboard = () => {
   const { user, isLoggedIn } = useAuth();
@@ -100,10 +100,7 @@ const Leaderboard = () => {
     return (
       <div className={styles.container}>
         <GradientBackground idPrefix="leaderboard" />
-        <Link to="/" className={styles.backLink}>
-          <ArrowLeft size={18} />
-          Back to Home
-        </Link>
+        <GlobalNav backClassName={styles.backLink} />
         <div className={styles.formWrap}>
           <div className={styles.card}>
             <h1 className={styles.title}>Error</h1>
@@ -118,10 +115,7 @@ const Leaderboard = () => {
     return (
       <div className={styles.container}>
         <GradientBackground idPrefix="leaderboard" />
-        <Link to="/" className={styles.backLink}>
-          <ArrowLeft size={18} />
-          Back to Home
-        </Link>
+        <GlobalNav backClassName={styles.backLink} />
         <div className={styles.formWrap}>
           <div className={styles.card}>
             <h1 className={styles.title}>Empty</h1>
@@ -135,11 +129,7 @@ const Leaderboard = () => {
   return (
     <div className={styles.container}>
       <GradientBackground idPrefix="leaderboard" />
-
-      <Link to="/" className={styles.backLink}>
-        <ArrowLeft size={18} />
-        Back to Home
-      </Link>
+      <GlobalNav backClassName={styles.backLink} />
         <div className={styles.card}>
           <div className={styles.header}>
             <Trophy className={styles.headerIcon} />

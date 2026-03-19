@@ -35,6 +35,13 @@ export type CardResponse = {
   scenario_text: string;
   decision_a: string;
   decision_b: string;
+  // Predicted metrics for hover previews
+  a_biosphere_after: number;
+  a_society_after: number;
+  a_economy_after: number;
+  b_biosphere_after: number;
+  b_society_after: number;
+  b_economy_after: number;
   game_over?: boolean;
 };
 

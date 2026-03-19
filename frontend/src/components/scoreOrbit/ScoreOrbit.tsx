@@ -1,11 +1,14 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  AnimatePresence,
   LayoutGroup,
   motion,
   useAnimate,
   type Transition,
 } from "framer-motion";
+import { Activity, AlertTriangle, Leaf, Users } from "lucide-react";
 import styles from "./ScoreOrbit.module.css";
+import { DeltaPop } from "../deltaPop/DeltaPop";
 
 export type OrbitMetric = {
   id: number;
@@ -37,6 +40,7 @@ const delay = (fn: () => void, ms: number) => setTimeout(fn, ms);
 
 interface ScoreOrbitProps {
   items: OrbitMetric[];
+  ghostItems?: OrbitMetric[];
   stageSize?: number;
   orbitRadius?: number;
   children: React.ReactNode;
@@ -44,6 +48,7 @@ interface ScoreOrbitProps {
 
 export function ScoreOrbit({
   items,
+  ghostItems,
   stageSize = 360,
   orbitRadius = 120,
   children,
@@ -147,7 +152,10 @@ export function ScoreOrbit({
               }}
               layoutId={`orbit-item-${item.id}`}
             >
-              <OrbitMetricCard item={item} />
+              <OrbitMetricCard
+                item={item}
+                ghostValue={ghostItems?.find((g) => g.id === item.id)?.value}
+              />
             </motion.div>
           </motion.div>
         ))}
@@ -156,19 +164,118 @@ export function ScoreOrbit({
   );
 }
 
-function OrbitMetricCard({ item }: { item: OrbitMetric }) {
-  const isLow = item.value <= 30;
+function valueToColor(value: number): string {
+  // Piecewise interpolation across red -> yellow -> green.
+  // 0-30 => red, 30-50 => red->yellow, 50-70 => yellow->green, 70-100 => green
+  const clamp = (x: number, a: number, b: number) => Math.max(a, Math.min(b, x));
+  const v = clamp(value, 0, 100);
+
+  const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+  const redHue = 0; // red
+  const yellowHue = 55; // yellow-ish
+  const greenHue = 140; // green
+
+  if (v <= 30) return `hsl(${redHue}, 85%, 48%)`;
+  if (v <= 50) {
+    const t = (v - 30) / 20;
+    return `hsl(${lerp(redHue, yellowHue, t)}, 85%, 48%)`;
+  }
+  if (v <= 70) {
+    const t = (v - 50) / 20;
+    return `hsl(${lerp(yellowHue, greenHue, t)}, 85%, 48%)`;
+  }
+  return `hsl(${greenHue}, 85%, 48%)`;
+}
+
+function OrbitMetricCard({
+  item,
+  ghostValue,
+}: {
+  item: OrbitMetric;
+  ghostValue?: number;
+}) {
+  const currentPercent = Math.max(0, Math.min(100, item.value));
+  const fillColor = valueToColor(item.value);
+
+  const isCritical = item.value < 20;
+  const shouldPulse =
+    typeof ghostValue === "number" && Math.abs(ghostValue - item.value) >= 1;
+
+  // Show delta pop when the metric changes (after a player click).
+  const prevValueRef = useRef<number | null>(null);
+  const [deltaToShow, setDeltaToShow] = useState<number | null>(null);
+
+  useEffect(() => {
+    const prev = prevValueRef.current;
+    prevValueRef.current = item.value;
+
+    if (prev === null || prev === undefined) return;
+
+    const delta = item.value - prev;
+    if (delta === 0) return;
+
+    setDeltaToShow(delta);
+  }, [item.value]);
+
   return (
-    <div className={styles.orbitCard}>
-      <div className={styles.orbitLabel}>{item.name}</div>
+    <div className={`${styles.orbitCard} ${isCritical ? styles.orbitCardCritical : ""}`}>
+      <div className={styles.orbitLabel}>
+        <motion.span
+          className={styles.metricIcon}
+          aria-hidden
+          animate={{ opacity: [0.55, 1, 0.75], scale: [0.98, 1.05, 1] }}
+          transition={{ duration: 1.2, repeat: Infinity, repeatType: "mirror" }}
+        >
+          {item.id === 1 ? <Leaf size={14} /> : item.id === 2 ? <Users size={14} /> : <Activity size={14} />}
+        </motion.span>
+        <span>{item.name}</span>
+        {isCritical && (
+          <motion.span
+            className={styles.criticalIcon}
+            aria-hidden
+            animate={{ scale: [1, 1.2, 1], opacity: [1, 0.7, 1] }}
+            transition={{ duration: 0.25, repeat: Infinity, repeatType: "mirror" }}
+          >
+            <AlertTriangle size={14} />
+          </motion.span>
+        )}
+      </div>
+      {isCritical && (
+        <motion.div
+          className={styles.systemCritical}
+          aria-hidden
+          animate={{ opacity: [0.4, 1, 0.6, 1] }}
+          transition={{ duration: 0.7, repeat: Infinity, repeatType: "mirror" }}
+        >
+          System Critical
+        </motion.div>
+      )}
       <div className={styles.orbitRow}>
         <div className={styles.orbitTrack}>
-          <div
-            className={`${styles.orbitFill} ${isLow ? styles.orbitFillLow : styles.orbitFillHigh}`}
-            style={{
-              width: `${Math.max(0, Math.min(100, item.value))}%`,
+          <motion.div
+            className={`${styles.orbitFill} ${shouldPulse ? styles.orbitFillPulse : ""}`}
+            animate={{
+              width: `${currentPercent}%`,
+              backgroundColor: fillColor,
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 100,
+              damping: 20,
+              mass: 0.6,
             }}
           />
+
+          <AnimatePresence>
+            {deltaToShow !== null && deltaToShow !== 0 && (
+              <DeltaPop
+                key={`${item.id}-${item.value}`}
+                delta={deltaToShow}
+                leftPercent={currentPercent}
+                onDone={() => setDeltaToShow(null)}
+              />
+            )}
+          </AnimatePresence>
         </div>
         <span className={styles.orbitValue}>{item.value}</span>
       </div>

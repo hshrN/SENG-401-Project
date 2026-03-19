@@ -10,6 +10,33 @@
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
+  z-index: 0;
+}
+
+.container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  background: radial-gradient(circle at 50% 40%, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.35) 55%, rgba(0, 0, 0, 0.65) 100%);
+}
+
+.container::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 6;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.03) 0px,
+    rgba(255, 255, 255, 0.03) 1px,
+    rgba(0, 0, 0, 0) 3px,
+    rgba(0, 0, 0, 0) 5px
+  );
+  opacity: 0.25;
+  mix-blend-mode: overlay;
 }
 
 .content {
@@ -26,6 +53,251 @@
   min-height: 0;
   padding: 0 0.5rem;
   box-sizing: border-box;
+}
+
+.hudArena {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.carouselCenter {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.overlayCenter {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.overlayCenter::before {
+  content: "";
+  position: absolute;
+  inset: -35%;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 48%,
+    rgba(34, 197, 94, 0.28) 0%,
+    rgba(34, 197, 94, 0.12) 38%,
+    rgba(0, 0, 0, 0) 70%
+  );
+  filter: blur(0.5px);
+}
+
+.commandBar {
+  position: fixed;
+  left: 50%;
+  bottom: 1.25rem;
+  transform: translateX(-50%);
+  z-index: 80;
+  width: min(1200px, 92vw);
+  padding: 0.5rem 0.85rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 0.8rem;
+  border-radius: 0.9rem;
+  background: rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 18px 45px -20px rgba(0, 0, 0, 0.7);
+}
+
+.commandHistory {
+  min-width: 180px;
+  max-width: 240px;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.22);
+  padding: 0.4rem 0.55rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+}
+
+.commandHistoryInteractive {
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.commandHistoryInteractive:hover:not(:disabled) {
+  border-color: rgba(34, 197, 94, 0.32);
+  background: rgba(0, 0, 0, 0.28);
+  transform: translateY(-1px);
+}
+
+.commandHistoryInteractive:disabled {
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
+.commandHistoryLabel {
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.commandHistoryText {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.25;
+  color: rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+  line-clamp: 2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.previousCardOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.previousCardModal {
+  width: min(760px, 94vw);
+  border-radius: 0.95rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 22px 55px -25px rgba(0, 0, 0, 0.8);
+  padding: 0.9rem 1rem;
+}
+
+.previousCardModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.55rem;
+}
+
+.previousCardModalTitle {
+  margin: 0;
+  font-size: 0.88rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: 800;
+}
+
+.previousCardModalClose {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+  border-radius: 9999px;
+  padding: 0.28rem 0.7rem;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.previousCardModalText {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.previousCardChoices {
+  margin-top: 0.8rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.previousCardChoice {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 0.75rem;
+  padding: 0.55rem 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.84rem;
+  line-height: 1.28;
+}
+
+.previousCardChoiceLabel {
+  font-size: 0.67rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.previousCardChoiceSelected {
+  border-color: rgba(34, 197, 94, 0.45);
+  background: rgba(34, 197, 94, 0.12);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.14);
+}
+
+.commandItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 120px;
+}
+
+.commandLabel {
+  font-size: 0.7rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.68);
+  font-weight: 700;
+}
+
+.commandValue {
+  font-size: 1rem;
+  color: var(--app-foreground);
+  font-weight: 800;
+}
+
+.commandBarCritical {
+  border-color: rgba(248, 113, 113, 0.9);
+  animation: commandBorderFlicker 0.65s steps(2, end) infinite;
+}
+
+@keyframes commandBorderFlicker {
+  0% {
+    border-color: rgba(248, 113, 113, 0.15);
+    box-shadow: 0 0 0 rgba(248, 113, 113, 0), 0 0 0 rgba(248, 113, 113, 0);
+  }
+  45% {
+    border-color: rgba(248, 113, 113, 0.9);
+    box-shadow: 0 0 0 rgba(248, 113, 113, 0), 0 0 26px rgba(248, 113, 113, 0.34);
+  }
+  100% {
+    border-color: rgba(248, 113, 113, 0.15);
+    box-shadow: 0 0 0 rgba(248, 113, 113, 0), 0 0 0 rgba(248, 113, 113, 0);
+  }
 }
 
 .backLink {
@@ -45,6 +317,37 @@
 
 .backLink:hover {
   color: var(--app-foreground);
+}
+
+.hudToggle {
+  position: absolute;
+  top: 1.4rem;
+  right: 1.4rem;
+  z-index: 90;
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  color: rgba(255, 255, 255, 0.86);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 14px 30px -22px rgba(0, 0, 0, 0.8);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.hudToggle:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.hudToggle:active:not(:disabled) {
+  transform: translateY(0px);
 }
 
 .title {
@@ -316,4 +619,43 @@
     rgba(127, 29, 29, 0.35) 50%,
     rgba(248, 113, 113, 0.2) 100%
   );
+}
+
+.cardStack {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.worldStateText {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  width: 100%;
+  max-width: 420px;
+  border-radius: 0.75rem;
+  font-size: 0.92rem;
+  text-align: center;
+  line-height: 1.35;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.worldStateCritical {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.08);
+  border-color: rgba(248, 113, 113, 0.25);
+}
+
+.worldStateWarning {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.worldStateHealthy {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.08);
+  border-color: rgba(52, 211, 153, 0.25);
 }

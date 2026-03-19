@@ -1,17 +1,13 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
 import GradientBackground from "../components/shared/GradientBackground";
+import GlobalNav from "../components/shared/GlobalNav";
 import styles from "./About.module.css";
 
 const About = () => {
   return (
     <div className={styles.container}>
       <GradientBackground idPrefix="about" />
-      <Link to="/" className={styles.backLink}>
-        <ArrowLeft size={18} />
-        Back to Home
-      </Link>
+      <GlobalNav backClassName={styles.backLink} />
 
       <div className={styles.formWrap}>
         <div className={styles.card}>

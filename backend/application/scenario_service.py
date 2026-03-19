@@ -5,7 +5,7 @@ Uses infrastructure (Scenario, GameRound, db).
 
 import random
 from models import Scenario, GameRound, GameSession, db
-from domain.game import compute_final_score
+from domain.game import compute_final_score, apply_choice_impacts
 from datetime import datetime
 
 class ScenarioError(Exception):
@@ -49,9 +49,49 @@ def scenario_get_next(session_id: int) -> dict | None:
         return None  # game over
 
     scenario = random.choice(available)
+
+    # Compute predicted post-choice metrics for hover previews.
+    # These are based on current session metrics plus the scenario's A/B impacts.
+    session = GameSession.query.get(session_id)
+    if session is None:
+        raise ScenarioError("session not found", 404)
+
+    a_biosphere_after, a_society_after, a_economy_after = apply_choice_impacts(
+        session.biosphere,
+        session.society,
+        session.economy,
+        "a",
+        scenario.a_biosphere,
+        scenario.a_society,
+        scenario.a_economy,
+        scenario.b_biosphere,
+        scenario.b_society,
+        scenario.b_economy,
+    )
+
+    b_biosphere_after, b_society_after, b_economy_after = apply_choice_impacts(
+        session.biosphere,
+        session.society,
+        session.economy,
+        "b",
+        scenario.a_biosphere,
+        scenario.a_society,
+        scenario.a_economy,
+        scenario.b_biosphere,
+        scenario.b_society,
+        scenario.b_economy,
+    )
+
     return {
         "scenario_id": scenario.id,
         "scenario_text": scenario.scenario_text,
         "decision_a": scenario.decision_a,
         "decision_b": scenario.decision_b,
+        # Predicted metrics (used for "ghost" hover preview)
+        "a_biosphere_after": a_biosphere_after,
+        "a_society_after": a_society_after,
+        "a_economy_after": a_economy_after,
+        "b_biosphere_after": b_biosphere_after,
+        "b_society_after": b_society_after,
+        "b_economy_after": b_economy_after,
     }

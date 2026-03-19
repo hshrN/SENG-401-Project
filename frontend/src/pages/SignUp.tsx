@@ -1,12 +1,13 @@
 import React, { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, useInView } from "framer-motion";
-import { User, Lock, Eye, EyeOff, ArrowRight, ArrowLeft } from "lucide-react";
+import { User, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useAudio } from "../context/AudioContext";
 import { cn } from "../lib/utils";
 import styles from "./Login.module.css";
 import GradientBackground from "../components/shared/GradientBackground";
+import GlobalNav from "../components/shared/GlobalNav";
 
 const blurFadeVariants = {
   hidden: { y: 12, opacity: 0, filter: "blur(6px)" },
@@ -84,10 +85,7 @@ const SignUp = () => {
   return (
     <div className={cn(styles.container, styles.root)}>
       <GradientBackground idPrefix="signup"/>
-      <Link to="/" className={styles.backLink}>
-        <ArrowLeft size={18} />
-        Back to Home
-      </Link>
+      <GlobalNav backClassName={styles.backLink} />
 
       <div className={styles.formWrap}>
         <motion.div

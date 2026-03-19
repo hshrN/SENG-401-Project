@@ -54,7 +54,7 @@
   background: var(--app-surface);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--app-border);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 0.75rem;
   box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.35);
   display: flex;
@@ -68,6 +68,17 @@
   color: var(--app-muted);
   text-transform: uppercase;
   letter-spacing: 0.03em;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.metricIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(34, 197, 94, 0.9);
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55));
 }
 
 .orbitRow {
@@ -89,13 +100,59 @@
   min-width: 0;
   border-radius: 9999px;
   background: rgba(0, 0, 0, 0.3);
-  overflow: hidden;
+  overflow: visible; /* allow delta pop to float above/below the bar */
+  position: relative;
 }
 
 .orbitFill {
   height: 100%;
   border-radius: 9999px;
-  transition: width 0.3s ease;
+  position: relative;
+}
+
+.orbitFillPulse {
+  animation: orbitPulse 0.35s ease-out;
+}
+
+@keyframes orbitPulse {
+  0% {
+    filter: brightness(1);
+    box-shadow: none;
+  }
+  55% {
+    filter: brightness(1.25);
+    box-shadow: 0 0 18px rgba(34, 197, 94, 0.35);
+  }
+  100% {
+    filter: brightness(1);
+    box-shadow: none;
+  }
+}
+
+.orbitCardCritical {
+  border-color: rgba(248, 113, 113, 0.6);
+  background: rgba(248, 113, 113, 0.08);
+  animation: criticalFlash 0.55s ease-in-out infinite;
+}
+
+@keyframes criticalFlash {
+  0% {
+    box-shadow: 0 0 0 rgba(248, 113, 113, 0);
+  }
+  45% {
+    box-shadow: 0 0 22px rgba(248, 113, 113, 0.28);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(248, 113, 113, 0);
+  }
+}
+
+.systemCritical {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: rgba(248, 113, 113, 0.95);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .orbitFillHigh {
@@ -104,4 +161,20 @@
 
 .orbitFillLow {
   background: linear-gradient(90deg, #b91c1c, #f87171);
+}
+
+.ghostFill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  border-radius: 9999px;
+  pointer-events: none;
+}
+
+.criticalIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #f97316; /* orange-ish danger pulse */
 }
