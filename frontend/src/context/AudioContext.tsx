@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, ReactNode, useCallback } from 'react';
 
 type AudioContextType = {
   isMuted: boolean;
@@ -113,7 +113,7 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
     }
   };
 
-  const stopBgm = () => {
+  const stopBgm = useCallback(() => {
     isBgmPlayingRef.current = false;
     if (activeBgmSpeedRef.current) {
       const track = soundsRef.current[`bgm_${activeBgmSpeedRef.current}`];
@@ -123,7 +123,7 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
       }
     }
     activeBgmSpeedRef.current = null;
-  };
+  }, []);
 
   const setBgmSpeed = (speed: 1 | 2 | 4 | 8) => {
     if (!isBgmPlayingRef.current || activeBgmSpeedRef.current === speed) return;
