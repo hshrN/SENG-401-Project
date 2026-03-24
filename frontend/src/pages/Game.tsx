@@ -6,6 +6,7 @@ import React, {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  AlertTriangle,
   ArrowLeft,
   Eye,
   EyeOff,
@@ -467,37 +468,68 @@ const Game = () => {
         <GradientBackground idPrefix="game" />
         <GlobalNav backClassName={styles.backLink} />
         <div className={styles.content}>
-          <div className={styles.card}>
-            <h1 className={styles.gameOverTitle}>Game Over</h1>
-            <p className={styles.gameOverSubtitle}>
-              One of your metrics collapsed — global coordination failed.
-            </p>
-            {finalScore !== null && (
-              <p className={styles.finalScore}>Final Score: {finalScore}</p>
-            )}
-            <div className={styles.metrics}>
-              <MetricBar label="Biosphere" value={biosphere} />
-              <MetricBar label="Society" value={society} />
-              <MetricBar label="Economy" value={economy} />
+          <motion.div
+            className={`${styles.card} ${styles.startCard}`}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className={styles.startMissionBar}>
+              <span className={styles.startMissionId}>
+                <Radio size={14} aria-hidden />
+                Protocol · Global coalition sim
+              </span>
+              <span className={styles.startSdgPill}>SDG 17</span>
             </div>
-            <button
-              type="button"
-              className={styles.primaryBtn}
-              onClick={handleRestart}
-            >
-              Play Again
-            </button>
-            <button
-              type="button"
-              className={styles.secondaryBtn}
-              onClick={() => {
-                playSound("button_click");
-                navigate("/leaderboard");
-              }}
-            >
-              View Leaderboard
-            </button>
-          </div>
+
+            <div className={styles.startHero}>
+              <div className={styles.startIconRing} aria-hidden>
+                <AlertTriangle size={28} strokeWidth={1.75} />
+              </div>
+              <h1 className={styles.startTitle}>Game Over</h1>
+              <p className={styles.startTagline}>
+                One of your metrics collapsed — global coordination failed.
+              </p>
+            </div>
+
+            {finalScore !== null && (
+              <p className={styles.startFinalScore}>
+                Final score: <strong>{finalScore}</strong>
+              </p>
+            )}
+
+            <div className={styles.startHud}>
+              <span className={styles.startHudLabel}>Final readings</span>
+              <div className={styles.startHudMetrics}>
+                <MetricBar label="Biosphere" value={biosphere} />
+                <MetricBar label="Society" value={society} />
+                <MetricBar label="Economy" value={economy} />
+              </div>
+            </div>
+
+            <div className={styles.startCta}>
+              <button
+                type="button"
+                className={styles.primaryBtn}
+                onClick={handleRestart}
+              >
+                Play again
+              </button>
+              <button
+                type="button"
+                className={styles.secondaryBtn}
+                onClick={() => {
+                  playSound("button_click");
+                  navigate("/leaderboard");
+                }}
+              >
+                View leaderboard
+              </button>
+              <p className={styles.startCtaHint}>
+                New run · scenario deck loaded
+              </p>
+            </div>
+          </motion.div>
         </div>
         <AudioControls />
       </div>
