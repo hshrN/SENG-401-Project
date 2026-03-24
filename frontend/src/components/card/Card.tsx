@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
 import styles from "./Card.module.css";
 import { useAudio } from "../../context/AudioContext";
 
@@ -21,7 +20,7 @@ const Card = ({
 }: CardProps) => {
   const { playSound } = useAudio();
 
-  const HOLD_MS = 2000;
+  const HOLD_MS = 1000;
   const [holdingChoice, setHoldingChoice] = useState<"a" | "b" | null>(null);
   const [holdProgress, setHoldProgress] = useState(0); // 0..1
   const rafRef = useRef<number | null>(null);
@@ -84,16 +83,24 @@ const Card = ({
     rafRef.current = requestAnimationFrame(tick);
   };
 
-  const buttonsDisabled = Boolean(disabled) || holdingChoice !== null;
-  const circle = 2 * Math.PI * 18;
-  const dashOffset = circle * (1 - holdProgress);
+  const baseDisabled = Boolean(disabled);
 
   return (
     <div className={styles.card}>
-      <div className={styles.buttons}>
+      <div className={styles.cardHeader}>
+        <span className={styles.cardHeaderEyebrow}>Response</span>
+        <h2 className={styles.cardHeaderTitle}>Choose one path</h2>
+        <p className={styles.cardHeaderHint}>Hold to confirm your decision</p>
+      </div>
+
+      <div className={styles.decisionGrid} role="group" aria-label="Decision options">
         <button
-          className={styles.choiceBtn}
-          disabled={buttonsDisabled}
+          type="button"
+          className={`${styles.decisionCard} ${styles.decisionCardA} ${
+            holdingChoice === "b" ? styles.decisionCardIdle : ""
+          }`}
+          disabled={baseDisabled || holdingChoice === "b"}
+          aria-label={`Option A: ${decision_a}`}
           onMouseEnter={() => {
             maybeBlip();
             onHoverChoice?.("a");
@@ -109,36 +116,25 @@ const Card = ({
           onPointerCancel={() => stopHolding()}
           onPointerLeave={() => stopHolding()}
         >
+          <span className={styles.decisionCardKicker}>Option A</span>
+          <span className={styles.decisionCardText}>{decision_a}</span>
           {holdingChoice === "a" && (
-            <div className={styles.holdRing} aria-hidden>
-              <svg width="54" height="54" viewBox="0 0 54 54">
-                <circle
-                  cx="27"
-                  cy="27"
-                  r="18"
-                  stroke="rgba(255,255,255,0.18)"
-                  strokeWidth="3"
-                  fill="transparent"
-                />
-                <motion.circle
-                  cx="27"
-                  cy="27"
-                  r="18"
-                  stroke="rgba(52,211,153,0.9)"
-                  strokeWidth="3"
-                  fill="transparent"
-                  strokeDasharray={circle}
-                  strokeDashoffset={dashOffset}
-                  strokeLinecap="round"
-                />
-              </svg>
+            <div className={styles.holdBarTrack} aria-hidden>
+              <div
+                className={`${styles.holdBarFill} ${styles.holdBarFillA}`}
+                style={{ width: `${holdProgress * 100}%` }}
+              />
             </div>
           )}
-          {decision_a}
         </button>
+
         <button
-          className={styles.choiceBtn}
-          disabled={buttonsDisabled}
+          type="button"
+          className={`${styles.decisionCard} ${styles.decisionCardB} ${
+            holdingChoice === "a" ? styles.decisionCardIdle : ""
+          }`}
+          disabled={baseDisabled || holdingChoice === "a"}
+          aria-label={`Option B: ${decision_b}`}
           onMouseEnter={() => {
             maybeBlip();
             onHoverChoice?.("b");
@@ -154,32 +150,16 @@ const Card = ({
           onPointerCancel={() => stopHolding()}
           onPointerLeave={() => stopHolding()}
         >
+          <span className={styles.decisionCardKicker}>Option B</span>
+          <span className={styles.decisionCardText}>{decision_b}</span>
           {holdingChoice === "b" && (
-            <div className={styles.holdRing} aria-hidden>
-              <svg width="54" height="54" viewBox="0 0 54 54">
-                <circle
-                  cx="27"
-                  cy="27"
-                  r="18"
-                  stroke="rgba(255,255,255,0.18)"
-                  strokeWidth="3"
-                  fill="transparent"
-                />
-                <motion.circle
-                  cx="27"
-                  cy="27"
-                  r="18"
-                  stroke="rgba(239,68,68,0.9)"
-                  strokeWidth="3"
-                  fill="transparent"
-                  strokeDasharray={circle}
-                  strokeDashoffset={dashOffset}
-                  strokeLinecap="round"
-                />
-              </svg>
+            <div className={styles.holdBarTrack} aria-hidden>
+              <div
+                className={`${styles.holdBarFill} ${styles.holdBarFillB}`}
+                style={{ width: `${holdProgress * 100}%` }}
+              />
             </div>
           )}
-          {decision_b}
         </button>
       </div>
     </div>

@@ -2,12 +2,10 @@ import React, { useEffect, useMemo } from "react";
 import { motion, useAnimation } from "framer-motion";
 import { Target } from "lucide-react";
 import styles from "./StateImageCarousel.module.css";
+import { CARD_FACE_COUNT, CARD_FACE_URLS } from "../../utils/cardFaceState";
 
-const FACE_COUNT = 19;
-const IMAGE_URLS = Array.from(
-  { length: FACE_COUNT },
-  (_, i) => `/assets/${i + 1}.png`
-);
+const IMAGE_URLS = CARD_FACE_URLS;
+const FACE_COUNT = CARD_FACE_COUNT;
 
 const ROTATION_TRANSITION = {
   type: "spring" as const,

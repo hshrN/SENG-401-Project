@@ -382,8 +382,165 @@
 }
 
 .startCard {
-  max-width: 400px;
+  max-width: min(440px, 92vw);
   margin: 0 auto;
+  align-items: stretch;
+  text-align: left;
+  gap: 1.25rem;
+}
+
+.startMissionBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.startMissionId {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(52, 211, 153, 0.85);
+}
+
+.startSdgPill {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(34, 197, 94, 0.45);
+  background: rgba(34, 197, 94, 0.12);
+  color: #86efac;
+}
+
+.startHero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.65rem;
+}
+
+.startIconRing {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4ade80;
+  background: radial-gradient(circle at 30% 30%, rgba(34, 197, 94, 0.35), rgba(0, 0, 0, 0.5));
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  box-shadow: 0 0 28px rgba(34, 197, 94, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.startTitle {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  color: var(--app-foreground);
+}
+
+.startTagline {
+  margin: 0;
+  font-size: 0.94rem;
+  line-height: 1.5;
+  color: var(--app-muted);
+  max-width: 36ch;
+}
+
+.startWhyBox {
+  padding: 0.85rem 1rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  background: linear-gradient(145deg, rgba(34, 197, 94, 0.08), rgba(0, 0, 0, 0.25));
+}
+
+.startWhyHeading {
+  margin: 0 0 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(167, 243, 208, 0.95);
+}
+
+.startWhyText {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: rgba(226, 232, 240, 0.92);
+}
+
+.startHud {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.startHudLabel {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.startHudGauges {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.startHudItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.5rem 0.35rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.22);
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.startHudItem svg {
+  color: rgba(52, 211, 153, 0.9);
+  opacity: 0.95;
+}
+
+.startHudItem strong {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--app-foreground);
+}
+
+.startCta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.15rem;
+}
+
+.startCta .primaryBtn {
+  width: 100%;
+}
+
+.startCtaHint {
+  margin: 0;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.38);
+  letter-spacing: 0.02em;
 }
 
 .primaryBtn {
@@ -626,36 +783,200 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.85rem;
+  max-width: 28rem;
+}
+
+.stateRevealShell {
+  width: 100%;
+  max-width: 24rem;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.65rem;
+}
+
+.stateRevealHeader {
+  text-align: center;
+}
+
+.stateRevealEyebrow {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(187, 247, 208, 0.55);
+  margin-bottom: 0.2rem;
+}
+
+.stateRevealTitle {
+  font-size: 0.9rem;
+  font-weight: 650;
+  color: var(--app-foreground);
+  letter-spacing: -0.02em;
+}
+
+.choicesShell {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .worldStateText {
   margin: 0;
-  padding: 0.75rem 0.9rem;
+  padding: 0.85rem 1rem;
   width: 100%;
   max-width: 420px;
-  border-radius: 0.75rem;
-  font-size: 0.92rem;
+  border-radius: 0.85rem;
+  font-size: 0.94rem;
   text-align: center;
-  line-height: 1.35;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  line-height: 1.45;
+  box-sizing: border-box;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-width: 1px;
+  border-style: solid;
+  box-shadow:
+    0 4px 28px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09);
+}
+
+.worldStateTextInner {
+  margin: 0;
+}
+
+.worldStateCompact {
+  max-width: 100%;
+}
+
+.worldStateProminent {
+  max-width: none;
+  width: 100%;
+  padding: 1.15rem 1.2rem 1.05rem;
+  font-size: 1.02rem;
+  letter-spacing: -0.01em;
+}
+
+.worldStatePulse.worldStateHealthy {
+  animation: worldStatePulseHealthy 1.15s ease-in-out infinite;
+}
+
+.worldStatePulse.worldStateWarning {
+  animation: worldStatePulseWarning 1.15s ease-in-out infinite;
+}
+
+.worldStatePulse.worldStateCritical {
+  animation: worldStatePulseCritical 1.15s ease-in-out infinite;
+}
+
+@keyframes worldStatePulseHealthy {
+  0%,
+  100% {
+    box-shadow:
+      0 4px 28px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.09),
+      0 0 0 0 rgba(52, 211, 153, 0);
+  }
+  50% {
+    box-shadow:
+      0 10px 36px rgba(0, 0, 0, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      0 0 40px rgba(52, 211, 153, 0.22);
+  }
+}
+
+@keyframes worldStatePulseWarning {
+  0%,
+  100% {
+    box-shadow:
+      0 4px 28px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.09),
+      0 0 0 0 rgba(245, 158, 11, 0);
+  }
+  50% {
+    box-shadow:
+      0 10px 36px rgba(0, 0, 0, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      0 0 40px rgba(245, 158, 11, 0.2);
+  }
+}
+
+@keyframes worldStatePulseCritical {
+  0%,
+  100% {
+    box-shadow:
+      0 4px 28px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.09),
+      0 0 0 0 rgba(248, 113, 113, 0);
+  }
+  50% {
+    box-shadow:
+      0 10px 36px rgba(0, 0, 0, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      0 0 42px rgba(248, 113, 113, 0.25);
+  }
+}
+
+.worldStateSameLine {
+  margin: 0.75rem 0 0;
+  padding: 0;
+}
+
+.worldStateSameBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(240, 253, 244, 0.92);
+}
+
+.nextScenarioLine {
+  margin: 0.65rem 0 0;
+  padding: 0;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: rgba(240, 253, 244, 0.55);
 }
 
 .worldStateCritical {
-  color: #f87171;
-  background: rgba(248, 113, 113, 0.08);
-  border-color: rgba(248, 113, 113, 0.25);
+  color: #fecaca;
+  background: linear-gradient(180deg, rgba(88, 28, 28, 0.94) 0%, rgba(50, 15, 15, 0.9) 100%);
+  border-color: rgba(248, 113, 113, 0.55);
+  text-shadow: 0 1px 14px rgba(0, 0, 0, 0.75);
+}
+
+.worldStateCritical .worldStateTextInner strong {
+  color: #fca5a5;
 }
 
 .worldStateWarning {
-  color: #f59e0b;
-  background: rgba(245, 158, 11, 0.08);
-  border-color: rgba(245, 158, 11, 0.25);
+  color: #fde68a;
+  background: linear-gradient(180deg, rgba(92, 64, 8, 0.92) 0%, rgba(55, 38, 5, 0.9) 100%);
+  border-color: rgba(245, 158, 11, 0.55);
+  text-shadow: 0 1px 14px rgba(0, 0, 0, 0.75);
+}
+
+.worldStateWarning .worldStateTextInner strong {
+  color: #fcd34d;
 }
 
 .worldStateHealthy {
-  color: #34d399;
-  background: rgba(52, 211, 153, 0.08);
-  border-color: rgba(52, 211, 153, 0.25);
+  color: #a7f3d0;
+  background: linear-gradient(180deg, rgba(6, 78, 59, 0.94) 0%, rgba(4, 42, 32, 0.92) 100%);
+  border-color: rgba(52, 211, 153, 0.55);
+  text-shadow: 0 1px 14px rgba(0, 0, 0, 0.75);
+}
+
+.worldStateHealthy .worldStateTextInner strong {
+  color: #6ee7b7;
 }

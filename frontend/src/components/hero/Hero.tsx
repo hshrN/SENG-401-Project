@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, ReactNode } from "react";
 import styles from "./Hero.module.css";
 import { useAudio } from "../../context/AudioContext";
+import { CARD_FACE_URLS } from "../../utils/cardFaceState";
 
 const defaultShaderSource = `#version 300 es
 precision highp float;
@@ -94,6 +95,26 @@ export interface HeroProps {
   palette?: {
     tint?: [number, number, number];
   };
+  /** Visual accent: default (amber) or partnership (SDG 17 green). */
+  accent?: "default" | "partnership";
+  /** Decorative scenario cards drifting behind the hero (above the shader). */
+  showFlyingCards?: boolean;
+}
+
+function HeroFlyingCards({ accent }: { accent: "default" | "partnership" }) {
+  const layerClass =
+    accent === "partnership"
+      ? `${styles.flyingCardsLayer} ${styles.flyingCardsLayerPartnership}`
+      : `${styles.flyingCardsLayer} ${styles.flyingCardsLayerDefault}`;
+  return (
+    <div className={layerClass} aria-hidden>
+      {CARD_FACE_URLS.map((src, i) => (
+        <div key={src} className={styles.flyingCard} data-card={i}>
+          <img src={src} alt="" className={styles.flyingCardImg} draggable={false} />
+        </div>
+      ))}
+    </div>
+  );
 }
 
 class WebGLRenderer {
@@ -361,10 +382,14 @@ const Hero: React.FC<HeroProps> = ({
   buttons,
   className = "",
   palette,
+  accent = "default",
+  showFlyingCards = false,
 }) => {
   const tint = palette?.tint ?? DEFAULT_TINT;
   const canvasRef = useShaderBackground(tint);
   const { playSound } = useAudio();
+  const overlayClass =
+    accent === "partnership" ? `${styles.heroOverlay} ${styles.heroPartnership}` : styles.heroOverlay;
 
   return (
     <div className={`relative w-full h-screen overflow-hidden bg-black ${className}`}>
@@ -373,7 +398,8 @@ const Hero: React.FC<HeroProps> = ({
         className={styles.shaderCanvas}
         style={{ background: "black" }}
       />
-      <div className={styles.heroOverlay}>
+      {showFlyingCards ? <HeroFlyingCards accent={accent} /> : null}
+      <div className={overlayClass}>
         {trustBadge && (
           <div className={`${styles.trustBadge} ${styles.animateFadeInDown}`}>
             {trustBadge.icon && <span className={styles.trustBadgeIcons}>{trustBadge.icon}</span>}
