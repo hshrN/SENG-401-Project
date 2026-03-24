@@ -7,7 +7,7 @@ type AudioContextType = {
   toggleMute: () => void;
   setMusicVolume: (volume: number) => void;
   setSfxVolume: (volume: number) => void;
-  playSound: (soundName: string) => void;
+  playSound: (soundName: string) => HTMLAudioElement | void;
   startBgm: () => void;
   stopBgm: () => void;
   setBgmSpeed: (speed: 1 | 2 | 4 | 8) => void;
@@ -33,7 +33,7 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
   const [sfxVolume, setSfxVolumeState] = useState<number>(1);
 
   const soundsRef = useRef<{ [key: string]: HTMLAudioElement }>({});
-  
+
   const activeBgmSpeedRef = useRef<1 | 2 | 4 | 8 | null>(null);
   const isBgmPlayingRef = useRef<boolean>(false);
 
@@ -53,6 +53,9 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
 
     const clickSound = new Audio('/assets/button_click_1.mp3');
     soundsRef.current['button_click'] = clickSound;
+
+    const buttonHoldSound = new Audio('/assets/button_hold_3.mp3');
+    soundsRef.current['button_hold'] = buttonHoldSound;
 
     const gameStartSound = new Audio('/assets/game_start_1.mp3');
     soundsRef.current['game_start'] = gameStartSound;
@@ -92,6 +95,7 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
       const clonedSound = sound.cloneNode() as HTMLAudioElement;
       clonedSound.volume = sfxVolume;
       clonedSound.play().catch((err) => console.log('Audio play failed:', err));
+      return clonedSound;
     } else {
       console.warn(`Sound ${soundName} not found.`);
     }
@@ -102,7 +106,7 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
     isBgmPlayingRef.current = true;
     const initialSpeed = 1;
     activeBgmSpeedRef.current = initialSpeed;
-    
+
     if (isMuted) return;
 
     const track = soundsRef.current[`bgm_${initialSpeed}`];
@@ -137,7 +141,7 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
     if (oldTrack && newTrack) {
       const currentTime = oldTrack.currentTime;
       oldTrack.pause();
-      
+
       newTrack.currentTime = currentTime;
       if (!isMuted) {
         newTrack.volume = musicVolume;
