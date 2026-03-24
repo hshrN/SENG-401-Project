@@ -217,3 +217,281 @@
     font-size: 5rem;
   }
 }
+
+/* SDG 17 / partnership accent — matches game briefing (green coalition) */
+.heroPartnership .trustBadge {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(52, 211, 153, 0.35);
+}
+
+.heroPartnership .trustBadgeText {
+  color: rgba(220, 252, 231, 0.98);
+}
+
+.heroPartnership .heroSubtitle {
+  color: rgba(226, 232, 240, 0.92);
+}
+
+.heroPartnership .headlineLine1 {
+  background: linear-gradient(
+    to right,
+    rgb(187, 247, 208),
+    rgb(74, 222, 128),
+    rgb(34, 197, 94)
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.heroPartnership .headlineLine2 {
+  background: linear-gradient(
+    to right,
+    rgb(52, 211, 153),
+    rgb(16, 185, 129),
+    rgb(6, 95, 70)
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.heroPartnership .btnPrimary {
+  background: linear-gradient(to right, rgb(34, 197, 94), rgb(21, 128, 61));
+  color: rgb(10, 22, 18);
+}
+
+.heroPartnership .btnPrimary:hover {
+  background: linear-gradient(to right, rgb(22, 163, 74), rgb(20, 83, 45));
+  box-shadow: 0 25px 50px -12px rgba(34, 197, 94, 0.35);
+}
+
+.heroPartnership .btnSecondary {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(52, 211, 153, 0.35);
+  color: rgba(220, 252, 231, 0.98);
+}
+
+.heroPartnership .btnSecondary:hover {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: rgba(52, 211, 153, 0.55);
+}
+
+/* --- Flying scenario cards (behind hero copy, above shader) --- */
+.flyingCardsLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.flyingCard {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 58px;
+  height: 82px;
+  border-radius: 10px;
+  transform-origin: center center;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  will-change: transform, opacity;
+}
+
+.flyingCardImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 9px;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.flyingCardsLayerPartnership .flyingCard {
+  border: 1px solid rgba(52, 211, 153, 0.28);
+}
+
+.flyingCardsLayerDefault .flyingCard {
+  border: 1px solid rgba(253, 186, 116, 0.28);
+}
+
+@keyframes heroCruiseA {
+  0% {
+    transform: translate3d(-18vw, 96vh, 0) rotate(-14deg) scale(0.82);
+    opacity: 0;
+  }
+  7% {
+    opacity: 0.26;
+  }
+  93% {
+    opacity: 0.26;
+  }
+  100% {
+    transform: translate3d(108vw, -12vh, 0) rotate(20deg) scale(0.82);
+    opacity: 0;
+  }
+}
+
+@keyframes heroCruiseB {
+  0% {
+    transform: translate3d(108vw, 72vh, 0) rotate(16deg) scale(0.75);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.22;
+  }
+  92% {
+    opacity: 0.22;
+  }
+  100% {
+    transform: translate3d(-22vw, -18vh, 0) rotate(-22deg) scale(0.75);
+    opacity: 0;
+  }
+}
+
+@keyframes heroCruiseC {
+  0% {
+    transform: translate3d(42vw, 102vh, 0) rotate(8deg) scale(0.68);
+    opacity: 0;
+  }
+  6% {
+    opacity: 0.2;
+  }
+  94% {
+    opacity: 0.2;
+  }
+  100% {
+    transform: translate3d(38vw, -22vh, 0) rotate(-10deg) scale(0.68);
+    opacity: 0;
+  }
+}
+
+@keyframes heroCruiseD {
+  0% {
+    transform: translate3d(-12vw, 38vh, 0) rotate(-6deg) scale(0.92);
+    opacity: 0;
+  }
+  5% {
+    opacity: 0.18;
+  }
+  95% {
+    opacity: 0.18;
+  }
+  100% {
+    transform: translate3d(112vw, 48vh, 0) rotate(9deg) scale(0.92);
+    opacity: 0;
+  }
+}
+
+@keyframes heroCruiseE {
+  0% {
+    transform: translate3d(85vw, 100vh, 0) rotate(-20deg) scale(0.64);
+    opacity: 0;
+  }
+  9% {
+    opacity: 0.24;
+  }
+  91% {
+    opacity: 0.24;
+  }
+  100% {
+    transform: translate3d(5vw, -20vh, 0) rotate(14deg) scale(0.64);
+    opacity: 0;
+  }
+}
+
+.flyingCardsLayer .flyingCard[data-card="0"] {
+  animation: heroCruiseA 52s linear infinite;
+  animation-delay: -4s;
+}
+.flyingCardsLayer .flyingCard[data-card="1"] {
+  animation: heroCruiseB 58s linear infinite;
+  animation-delay: -18s;
+}
+.flyingCardsLayer .flyingCard[data-card="2"] {
+  animation: heroCruiseC 64s linear infinite;
+  animation-delay: -32s;
+}
+.flyingCardsLayer .flyingCard[data-card="3"] {
+  animation: heroCruiseD 46s linear infinite;
+  animation-delay: -8s;
+}
+.flyingCardsLayer .flyingCard[data-card="4"] {
+  animation: heroCruiseE 55s linear infinite;
+  animation-delay: -25s;
+}
+.flyingCardsLayer .flyingCard[data-card="5"] {
+  animation: heroCruiseA 49s linear infinite;
+  animation-delay: -38s;
+}
+.flyingCardsLayer .flyingCard[data-card="6"] {
+  animation: heroCruiseB 61s linear infinite;
+  animation-delay: -11s;
+}
+.flyingCardsLayer .flyingCard[data-card="7"] {
+  animation: heroCruiseC 56s linear infinite;
+  animation-delay: -44s;
+}
+.flyingCardsLayer .flyingCard[data-card="8"] {
+  animation: heroCruiseD 53s linear infinite;
+  animation-delay: -29s;
+}
+.flyingCardsLayer .flyingCard[data-card="9"] {
+  animation: heroCruiseE 59s linear infinite;
+  animation-delay: -52s;
+}
+
+.flyingCardsLayer .flyingCard[data-card="10"] {
+  animation: heroCruiseA 51s linear infinite;
+  animation-delay: -14s;
+}
+.flyingCardsLayer .flyingCard[data-card="11"] {
+  animation: heroCruiseB 57s linear infinite;
+  animation-delay: -27s;
+}
+.flyingCardsLayer .flyingCard[data-card="12"] {
+  animation: heroCruiseC 63s linear infinite;
+  animation-delay: -40s;
+}
+.flyingCardsLayer .flyingCard[data-card="13"] {
+  animation: heroCruiseD 47s linear infinite;
+  animation-delay: -9s;
+}
+.flyingCardsLayer .flyingCard[data-card="14"] {
+  animation: heroCruiseE 54s linear infinite;
+  animation-delay: -33s;
+}
+.flyingCardsLayer .flyingCard[data-card="15"] {
+  animation: heroCruiseA 50s linear infinite;
+  animation-delay: -46s;
+}
+.flyingCardsLayer .flyingCard[data-card="16"] {
+  animation: heroCruiseB 60s linear infinite;
+  animation-delay: -19s;
+}
+.flyingCardsLayer .flyingCard[data-card="17"] {
+  animation: heroCruiseC 55s linear infinite;
+  animation-delay: -36s;
+}
+.flyingCardsLayer .flyingCard[data-card="18"] {
+  animation: heroCruiseD 54s linear infinite;
+  animation-delay: -21s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flyingCardsLayer .flyingCard {
+    animation: none !important;
+    opacity: 0.16;
+    transform: translate3d(20vw, 30vh, 0) rotate(-8deg) scale(0.85);
+  }
+
+  .flyingCardsLayer .flyingCard:nth-child(odd) {
+    transform: translate3d(70vw, 55vh, 0) rotate(10deg) scale(0.75);
+  }
+}

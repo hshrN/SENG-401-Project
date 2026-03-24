@@ -1,41 +1,165 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import styles from "./Card.module.css";
 import { useAudio } from "../../context/AudioContext";
 
 type CardProps = {
-  scenario_text: string;
   decision_a: string;
   decision_b: string;
   onChoice: (choice: "a" | "b") => void;
+  // Used by the parent to preview the outcome when hovering decision buttons.
+  onHoverChoice?: (choice: "a" | "b" | null) => void;
   disabled?: boolean;
 };
 
-const Card = ({ scenario_text, decision_a, decision_b, onChoice, disabled }: CardProps) => {
+const Card = ({
+  decision_a,
+  decision_b,
+  onChoice,
+  onHoverChoice,
+  disabled,
+}: CardProps) => {
   const { playSound } = useAudio();
+
+  const HOLD_MS = 1000;
+  const [holdingChoice, setHoldingChoice] = useState<"a" | "b" | null>(null);
+  const [holdProgress, setHoldProgress] = useState(0); // 0..1
+  const rafRef = useRef<number | null>(null);
+  const startRef = useRef<number | null>(null);
+  const completedRef = useRef(false);
+  const lastHoverSoundAtRef = useRef(0);
+
+  const maybeBlip = () => {
+    const now = Date.now();
+    if (now - lastHoverSoundAtRef.current < 450) return;
+    lastHoverSoundAtRef.current = now;
+    // Using the existing SFX asset as a stand-in for a light “blip”.
+    playSound("button_click");
+  };
+
+  useEffect(() => {
+    return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  const stopHolding = () => {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    startRef.current = null;
+    completedRef.current = false;
+    setHoldingChoice(null);
+    setHoldProgress(0);
+    onHoverChoice?.(null);
+  };
+
+  const startHolding = (choice: "a" | "b") => {
+    if (disabled) return;
+    if (holdingChoice !== null) return;
+
+    completedRef.current = false;
+    startRef.current = performance.now();
+    setHoldingChoice(choice);
+    setHoldProgress(0);
+
+    const tick = () => {
+      const start = startRef.current ?? performance.now();
+      const now = performance.now();
+      const p = Math.min(1, (now - start) / HOLD_MS);
+      setHoldProgress(p);
+
+      if (p >= 1 && !completedRef.current) {
+        completedRef.current = true;
+        setHoldingChoice(null);
+        setHoldProgress(0);
+        onHoverChoice?.(null);
+        playSound("button_click");
+        onChoice(choice);
+        return;
+      }
+
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+  };
+
+  const baseDisabled = Boolean(disabled);
 
   return (
     <div className={styles.card}>
-      <p className={styles.scenario}>{scenario_text}</p>
-      <div className={styles.buttons}>
+      <div className={styles.cardHeader}>
+        <span className={styles.cardHeaderEyebrow}>Response</span>
+        <h2 className={styles.cardHeaderTitle}>Choose one path</h2>
+        <p className={styles.cardHeaderHint}>Hold to confirm your decision</p>
+      </div>
+
+      <div className={styles.decisionGrid} role="group" aria-label="Decision options">
         <button
-          className={styles.choiceBtn}
-          onClick={() => {
-            playSound("button_click");
-            onChoice("a");
+          type="button"
+          className={`${styles.decisionCard} ${styles.decisionCardA} ${
+            holdingChoice === "b" ? styles.decisionCardIdle : ""
+          }`}
+          disabled={baseDisabled || holdingChoice === "b"}
+          aria-label={`Option A: ${decision_a}`}
+          onMouseEnter={() => {
+            maybeBlip();
+            onHoverChoice?.("a");
           }}
-          disabled={disabled}
+          onMouseLeave={() => onHoverChoice?.(null)}
+          onFocus={() => {
+            maybeBlip();
+            onHoverChoice?.("a");
+          }}
+          onBlur={() => onHoverChoice?.(null)}
+          onPointerDown={() => startHolding("a")}
+          onPointerUp={() => stopHolding()}
+          onPointerCancel={() => stopHolding()}
+          onPointerLeave={() => stopHolding()}
         >
-          {decision_a}
+          <span className={styles.decisionCardKicker}>Option A</span>
+          <span className={styles.decisionCardText}>{decision_a}</span>
+          {holdingChoice === "a" && (
+            <div className={styles.holdBarTrack} aria-hidden>
+              <div
+                className={`${styles.holdBarFill} ${styles.holdBarFillA}`}
+                style={{ width: `${holdProgress * 100}%` }}
+              />
+            </div>
+          )}
         </button>
+
         <button
-          className={styles.choiceBtn}
-          onClick={() => {
-            playSound("button_click");
-            onChoice("b");
+          type="button"
+          className={`${styles.decisionCard} ${styles.decisionCardB} ${
+            holdingChoice === "a" ? styles.decisionCardIdle : ""
+          }`}
+          disabled={baseDisabled || holdingChoice === "a"}
+          aria-label={`Option B: ${decision_b}`}
+          onMouseEnter={() => {
+            maybeBlip();
+            onHoverChoice?.("b");
           }}
-          disabled={disabled}
+          onMouseLeave={() => onHoverChoice?.(null)}
+          onFocus={() => {
+            maybeBlip();
+            onHoverChoice?.("b");
+          }}
+          onBlur={() => onHoverChoice?.(null)}
+          onPointerDown={() => startHolding("b")}
+          onPointerUp={() => stopHolding()}
+          onPointerCancel={() => stopHolding()}
+          onPointerLeave={() => stopHolding()}
         >
-          {decision_b}
+          <span className={styles.decisionCardKicker}>Option B</span>
+          <span className={styles.decisionCardText}>{decision_b}</span>
+          {holdingChoice === "b" && (
+            <div className={styles.holdBarTrack} aria-hidden>
+              <div
+                className={`${styles.holdBarFill} ${styles.holdBarFillB}`}
+                style={{ width: `${holdProgress * 100}%` }}
+              />
+            </div>
+          )}
         </button>
       </div>
     </div>

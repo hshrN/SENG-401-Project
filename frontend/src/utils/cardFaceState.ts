@@ -1,12 +1,19 @@
 /**
- * Maps Biosphere, Society, Economy metrics (0-100) to card face image index 1-19.
- * Images live at public/assets/1.png through public/assets/19.png.
+ * Card face art in `public/assets/1.png` … `19.png`.
  *
- * State table:
- * - Critical: 0-30
- * - Moderate: 31-60
- * - Healthy: 61-100
+ * `getCardFaceIndex` maps Biosphere, Society, Economy (0–100) to image index 1–19.
+ * State bands: Critical 0–30, Moderate 31–60, Healthy 61–100.
  */
+
+/** Number of card-face PNGs in `public/assets/`. */
+export const CARD_FACE_COUNT = 19;
+
+/** Public URLs for each card face (`/assets/1.png` … `/assets/19.png`). */
+export const CARD_FACE_URLS: readonly string[] = Array.from(
+  { length: CARD_FACE_COUNT },
+  (_, i) => `/assets/${i + 1}.png`
+);
+
 export function getCardFaceIndex(
   biosphere: number,
   society: number,
