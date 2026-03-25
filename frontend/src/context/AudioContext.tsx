@@ -60,6 +60,9 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
     const gameStartSound = new Audio('/assets/game_start_1.mp3');
     soundsRef.current['game_start'] = gameStartSound;
 
+    const crashSound = new Audio('/assets/crash_1.mp3');
+    soundsRef.current['crash'] = crashSound;
+
     [1, 2, 4, 8].forEach((speed) => {
       const bgmSound = new Audio(`/assets/music_speed_${speed}.mp3`);
       bgmSound.loop = true;

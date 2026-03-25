@@ -267,11 +267,12 @@ const Game = () => {
       } catch {
         setGameOver(true);
         stopBgm();
+        playSound("crash");
       } finally {
         setIsLoading(false);
       }
     },
-    [stopBgm],
+    [stopBgm, playSound],
   );
 
   const fetchNextCard = useCallback(
@@ -314,6 +315,7 @@ const Game = () => {
         setGameOver(true);
         setFinalScore(result.final_score ?? null);
         stopBgm();
+        playSound("crash");
         return;
       }
 
