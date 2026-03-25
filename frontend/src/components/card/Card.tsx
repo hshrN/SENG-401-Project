@@ -20,22 +20,15 @@ const Card = ({
 }: CardProps) => {
   const { playSound } = useAudio();
 
-  const HOLD_MS = 1000;
+  const HOLD_MS = 1500;
   const [holdingChoice, setHoldingChoice] = useState<"a" | "b" | null>(null);
   const [holdProgress, setHoldProgress] = useState(0); // 0..1
   const rafRef = useRef<number | null>(null);
   const startRef = useRef<number | null>(null);
   const completedRef = useRef(false);
-  const lastHoverSoundAtRef = useRef(0);
+  const holdSoundRef = useRef<HTMLAudioElement | null>(null);
   const activePointerIdRef = useRef<number | null>(null);
 
-  const maybeBlip = () => {
-    const now = Date.now();
-    if (now - lastHoverSoundAtRef.current < 450) return;
-    lastHoverSoundAtRef.current = now;
-    // Using the existing SFX asset as a stand-in for a light “blip”.
-    playSound("button_click");
-  };
 
   useEffect(() => {
     return () => {
@@ -52,6 +45,11 @@ const Card = ({
     setHoldingChoice(null);
     setHoldProgress(0);
     onHoverChoice?.(null);
+    if (holdSoundRef.current) {
+      holdSoundRef.current.pause();
+      holdSoundRef.current.currentTime = 0;
+      holdSoundRef.current = null;
+    }
   };
 
   const startHolding = (
@@ -69,6 +67,11 @@ const Card = ({
     setHoldProgress(0);
     onHoverChoice?.(choice);
 
+    const audioNode = playSound("button_hold");
+    if (audioNode) {
+      holdSoundRef.current = audioNode;
+    }
+
     const tick = () => {
       const start = startRef.current ?? performance.now();
       const now = performance.now();
@@ -80,6 +83,11 @@ const Card = ({
         setHoldingChoice(null);
         setHoldProgress(0);
         onHoverChoice?.(null);
+        if (holdSoundRef.current) {
+          holdSoundRef.current.pause();
+          holdSoundRef.current.currentTime = 0;
+          holdSoundRef.current = null;
+        }
         playSound("button_click");
         onChoice(choice);
         return;
@@ -104,18 +112,15 @@ const Card = ({
       <div className={styles.decisionGrid} role="group" aria-label="Decision options">
         <button
           type="button"
-          className={`${styles.decisionCard} ${styles.decisionCardA} ${
-            holdingChoice === "b" ? styles.decisionCardIdle : ""
-          }`}
+          className={`${styles.decisionCard} ${styles.decisionCardA} ${holdingChoice === "b" ? styles.decisionCardIdle : ""
+            }`}
           disabled={baseDisabled || holdingChoice === "b"}
           aria-label={`Option A: ${decision_a}`}
           onMouseEnter={() => {
-            maybeBlip();
             onHoverChoice?.("a");
           }}
           onMouseLeave={() => onHoverChoice?.(null)}
           onFocus={() => {
-            maybeBlip();
             onHoverChoice?.("a");
           }}
           onBlur={() => onHoverChoice?.(null)}
@@ -144,18 +149,15 @@ const Card = ({
 
         <button
           type="button"
-          className={`${styles.decisionCard} ${styles.decisionCardB} ${
-            holdingChoice === "a" ? styles.decisionCardIdle : ""
-          }`}
+          className={`${styles.decisionCard} ${styles.decisionCardB} ${holdingChoice === "a" ? styles.decisionCardIdle : ""
+            }`}
           disabled={baseDisabled || holdingChoice === "a"}
           aria-label={`Option B: ${decision_b}`}
           onMouseEnter={() => {
-            maybeBlip();
             onHoverChoice?.("b");
           }}
           onMouseLeave={() => onHoverChoice?.(null)}
           onFocus={() => {
-            maybeBlip();
             onHoverChoice?.("b");
           }}
           onBlur={() => onHoverChoice?.(null)}

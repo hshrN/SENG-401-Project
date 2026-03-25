@@ -309,9 +309,9 @@ const Game = () => {
       const minMetric = Math.min(biosphere, society, economy);
       let targetSpeed: 1 | 2 | 4 | 8 = 1;
 
-      if (minMetric < 10) targetSpeed = 8;
-      else if (minMetric < 25) targetSpeed = 4;
-      else if (minMetric < 40) targetSpeed = 2;
+      if (minMetric < 15) targetSpeed = 8;
+      else if (minMetric < 30) targetSpeed = 4;
+      else if (minMetric < 45) targetSpeed = 2;
 
       setBgmSpeed(targetSpeed);
     }
@@ -475,11 +475,13 @@ const Game = () => {
           setError(completion.message || "Failed to load the next scenario.");
         }
         stopBgm();
+        playSound("crash");
       } finally {
         setIsLoading(false);
       }
     },
-    [selectedQuestionCount, stopBgm],
+    [selectedQuestionCount, stopBgm, playSound],
+
   );
 
   const fetchNextCard = useCallback(
@@ -531,6 +533,7 @@ const Game = () => {
         setGameOver(true);
         setFinalScore(result.final_score ?? null);
         stopBgm();
+        playSound("crash");
         return;
       }
 
@@ -1089,31 +1092,31 @@ const Game = () => {
               ghostItems={
                 currentCard && hoveredChoice
                   ? [
-                      {
-                        id: 1,
-                        name: "Biosphere",
-                        value:
-                          hoveredChoice === "a"
-                            ? currentCard.a_biosphere_after
-                            : currentCard.b_biosphere_after,
-                      },
-                      {
-                        id: 2,
-                        name: "Society",
-                        value:
-                          hoveredChoice === "a"
-                            ? currentCard.a_society_after
-                            : currentCard.b_society_after,
-                      },
-                      {
-                        id: 3,
-                        name: "Economy",
-                        value:
-                          hoveredChoice === "a"
-                            ? currentCard.a_economy_after
-                            : currentCard.b_economy_after,
-                      },
-                    ]
+                    {
+                      id: 1,
+                      name: "Biosphere",
+                      value:
+                        hoveredChoice === "a"
+                          ? currentCard.a_biosphere_after
+                          : currentCard.b_biosphere_after,
+                    },
+                    {
+                      id: 2,
+                      name: "Society",
+                      value:
+                        hoveredChoice === "a"
+                          ? currentCard.a_society_after
+                          : currentCard.b_society_after,
+                    },
+                    {
+                      id: 3,
+                      name: "Economy",
+                      value:
+                        hoveredChoice === "a"
+                          ? currentCard.a_economy_after
+                          : currentCard.b_economy_after,
+                    },
+                  ]
                   : undefined
               }
               stageSize={650}
@@ -1126,7 +1129,7 @@ const Game = () => {
                 <div className={styles.cardStack}>
                   <AnimatePresence mode="wait">
                     {postChoicePhase === "outcome" ||
-                    postChoicePhase === "loading" ? (
+                      postChoicePhase === "loading" ? (
                       <motion.div
                         key="interstitial"
                         className={styles.stateRevealShell}
@@ -1147,13 +1150,12 @@ const Game = () => {
                           </span>
                         </div>
                         <div
-                          className={`${styles.worldStateText} ${styles.worldStateProminent} ${
-                            worldState.zone === "critical"
+                          className={`${styles.worldStateText} ${styles.worldStateProminent} ${worldState.zone === "critical"
                               ? styles.worldStateCritical
                               : worldState.zone === "warning"
                                 ? styles.worldStateWarning
                                 : styles.worldStateHealthy
-                          } ${postChoicePhase === "outcome" ? styles.worldStatePulse : ""}`}
+                            } ${postChoicePhase === "outcome" ? styles.worldStatePulse : ""}`}
                         >
                           <p className={styles.worldStateTextInner}>
                             {worldStateParagraph(worldState)}
@@ -1202,13 +1204,12 @@ const Game = () => {
                   {postChoicePhase === "idle" && scenarioReady && (
                     <motion.div
                       key={`compact-${worldState.zone}-${worldState.metricName}-${worldState.metricValue}`}
-                      className={`${styles.worldStateText} ${styles.worldStateCompact} ${
-                        worldState.zone === "critical"
+                      className={`${styles.worldStateText} ${styles.worldStateCompact} ${worldState.zone === "critical"
                           ? styles.worldStateCritical
                           : worldState.zone === "warning"
                             ? styles.worldStateWarning
                             : styles.worldStateHealthy
-                      }`}
+                        }`}
                       initial={{ opacity: 0.85, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
@@ -1291,11 +1292,10 @@ const Game = () => {
               </p>
               <div className={styles.previousCardChoices}>
                 <div
-                  className={`${styles.previousCardChoice} ${
-                    previousCard.chosen === "a"
+                  className={`${styles.previousCardChoice} ${previousCard.chosen === "a"
                       ? styles.previousCardChoiceSelected
                       : ""
-                  }`}
+                    }`}
                 >
                   <span className={styles.previousCardChoiceLabel}>
                     Choice A
@@ -1303,11 +1303,10 @@ const Game = () => {
                   <span>{previousCard.decision_a}</span>
                 </div>
                 <div
-                  className={`${styles.previousCardChoice} ${
-                    previousCard.chosen === "b"
+                  className={`${styles.previousCardChoice} ${previousCard.chosen === "b"
                       ? styles.previousCardChoiceSelected
                       : ""
-                  }`}
+                    }`}
                 >
                   <span className={styles.previousCardChoiceLabel}>
                     Choice B
