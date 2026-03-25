@@ -28,6 +28,7 @@ export type SessionResponse = {
   biosphere: number;
   society: number;
   economy: number;
+  target_questions: number;
 };
 
 export type CardResponse = {
@@ -45,12 +46,24 @@ export type CardResponse = {
   game_over?: boolean;
 };
 
+export type GameResult = "failed" | "completed";
+
 export type RoundResponse = {
   biosphere: number;
   society: number;
   economy: number;
   game_over: boolean;
   final_score?: number;
+  game_result?: GameResult;
+  completed_questions: number;
+  target_questions: number;
+};
+
+export type ScenarioSettingsResponse = {
+  total_scenarios: number;
+  min_questions: number;
+  default_questions: number;
+  max_questions: number;
 };
 
 export type LeaderboardResponse = {
