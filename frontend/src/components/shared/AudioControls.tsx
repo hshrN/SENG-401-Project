@@ -2,11 +2,12 @@ import React from 'react';
 import { useAudio } from '../../context/AudioContext';
 
 const AudioControls = () => {
-  const { isMuted, sfxVolume, setSfxVolume, playSound } = useAudio();
+  const { isMuted, sfxVolume, setSfxVolume, setMusicVolume, playSound } = useAudio();
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVol = parseFloat(e.target.value);
     setSfxVolume(newVol);
+    setMusicVolume(newVol);
   };
 
   const handleVolumeRelease = () => {
