@@ -29,6 +29,7 @@ import {
   createSession,
   getNextCard,
   submitRound,
+  generateScenarios,
   type SessionResponse,
   type CardResponse,
 } from "../application/gameService";
@@ -129,6 +130,8 @@ const Game = () => {
   const [currentCard, setCurrentCard] = useState<CardResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [choiceDisabled, setChoiceDisabled] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generateMsg, setGenerateMsg] = useState<string | null>(null);
 
   const [biosphere, setBiosphere] = useState(50);
   const [society, setSociety] = useState(50);
@@ -254,6 +257,19 @@ const Game = () => {
       setError((err as Error).message);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGenerate = async () => {
+    setIsGenerating(true);
+    setGenerateMsg(null);
+    try {
+      const result = await generateScenarios(5);
+      setGenerateMsg(`Generated ${result.created} new scenarios!`);
+    } catch (err: unknown) {
+      setGenerateMsg((err as Error).message);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -450,6 +466,15 @@ const Game = () => {
               >
                 {isLoading ? "Initializing run…" : "Begin mission"}
               </button>
+              <button
+                type="button"
+                className={styles.secondaryBtn}
+                onClick={handleGenerate}
+                disabled={isGenerating}
+              >
+                {isGenerating ? "Generating…" : "Generate New Scenarios (AI)"}
+              </button>
+              {generateMsg && <p className={styles.generateMsg}>{generateMsg}</p>}
               <p className={styles.startCtaHint}>
                 New session · scenario deck loaded
               </p>

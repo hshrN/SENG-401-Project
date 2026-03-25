@@ -18,6 +18,7 @@ from application.session_service import session_create, SessionError
 from application.scenario_service import scenario_get_next, ScenarioError
 from application.round_service import round_submit, RoundError
 from application.leaderboard_service import get_leaderboard, LeaderboardError
+from application.ai_service import generate_scenarios, AIServiceError
 
 load_dotenv()
 
@@ -99,6 +100,17 @@ def next_scenario():
             return jsonify({"game_over": True}), 404
         return jsonify(result), 200
     except ScenarioError as e:
+        return jsonify({"error": e.message}), e.status_code
+
+
+@app.route("/api/scenarios/generate", methods=["POST"])
+def generate_ai_scenarios():
+    data = request.get_json(silent=True) or {}
+    count = data.get("count", 5)
+    try:
+        created = generate_scenarios(count)
+        return jsonify({"created": len(created), "scenarios": created}), 201
+    except AIServiceError as e:
         return jsonify({"error": e.message}), e.status_code
 
 

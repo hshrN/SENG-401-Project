@@ -46,3 +46,15 @@ export async function submitRound(
   }
   return response.json();
 }
+
+export async function generateScenarios(count: number = 5): Promise<{ created: number; scenarios: unknown[] }> {
+  const response = await apiFetch("/api/scenarios/generate", {
+    method: "POST",
+    body: JSON.stringify({ count }),
+  });
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.error ?? "Failed to generate scenarios");
+  }
+  return response.json();
+}

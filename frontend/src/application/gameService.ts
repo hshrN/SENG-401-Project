@@ -23,3 +23,7 @@ export async function submitRound(
 ): Promise<RoundResponse> {
   return gameApi.submitRound(sessionId, scenarioId, choiceMade);
 }
+
+export async function generateScenarios(count: number = 5): Promise<{ created: number; scenarios: unknown[] }> {
+  return gameApi.generateScenarios(count);
+}
