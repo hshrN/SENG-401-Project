@@ -4,6 +4,7 @@ Uses infrastructure (Scenario, GameRound, db).
 """
 
 import random
+from application.game_settings import build_question_limit_settings
 from models import Scenario, GameRound, GameSession, db
 from domain.game import compute_final_score, apply_choice_impacts
 from datetime import datetime
@@ -17,10 +18,19 @@ class ScenarioError(Exception):
         super().__init__(message)
 
 
-def scenario_get_next(session_id: int) -> dict | None:
+def scenario_get_settings() -> dict:
+    """Return current question-limit bounds from the scenario pool."""
+    total_scenarios = Scenario.query.count()
+    return {
+        "total_scenarios": total_scenarios,
+        **build_question_limit_settings(total_scenarios),
+    }
+
+
+def scenario_get_next(session_id: int) -> dict:
     """
     Return one random scenario not yet played in this session.
-    Returns None (and caller should treat as game over) when no scenarios remain.
+    Returns a completion payload when no scenarios remain.
     Returns dict with scenario_id, scenario_text, decision_a, decision_b.
     """
     if not session_id:
@@ -38,6 +48,9 @@ def scenario_get_next(session_id: int) -> dict | None:
 
     if not available:
         session = GameSession.query.get(session_id)
+        if session is None:
+            raise ScenarioError("session not found", 404)
+
         round_count = GameRound.query.filter_by(session_id=session_id).count()
 
         session.status = "ended"
@@ -46,7 +59,14 @@ def scenario_get_next(session_id: int) -> dict | None:
 
         db.session.commit()
 
-        return None  # game over
+        return {
+            "error": "Mission complete",
+            "game_over": True,
+            "game_result": "completed",
+            "final_score": session.final_score,
+            "completed_questions": round_count,
+            "target_questions": round_count,
+        }
 
     scenario = random.choice(available)
 

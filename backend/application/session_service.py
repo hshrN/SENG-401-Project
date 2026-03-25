@@ -1,9 +1,10 @@
 """
 Session use cases: create a new game session for a player.
-Uses infrastructure (Player, GameSession, db).
+Uses infrastructure (Player, GameSession, Scenario, db).
 """
 
-from models import Player, GameSession, db
+from application.game_settings import normalize_target_questions
+from models import Player, GameSession, Scenario, db
 
 
 class SessionError(Exception):
@@ -14,7 +15,7 @@ class SessionError(Exception):
         super().__init__(message)
 
 
-def session_create(username: str) -> dict:
+def session_create(username: str, target_questions: int | None = None) -> dict:
     """
     Create a new game session for the given username.
     Returns dict with session_id, biosphere, society, economy.
@@ -27,6 +28,12 @@ def session_create(username: str) -> dict:
     if not player:
         raise SessionError("Player not found. Please sign up first.", 404)
 
+    total_scenarios = Scenario.query.count()
+    try:
+        normalized_target_questions = normalize_target_questions(target_questions, total_scenarios)
+    except ValueError as e:
+        raise SessionError(str(e), 400)
+
     session = GameSession(player_id=player.id)
     db.session.add(session)
     db.session.commit()
@@ -36,4 +43,5 @@ def session_create(username: str) -> dict:
         "biosphere": session.biosphere,
         "society": session.society,
         "economy": session.economy,
+        "target_questions": normalized_target_questions,
     }

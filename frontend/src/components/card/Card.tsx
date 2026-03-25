@@ -27,6 +27,8 @@ const Card = ({
   const startRef = useRef<number | null>(null);
   const completedRef = useRef(false);
   const holdSoundRef = useRef<HTMLAudioElement | null>(null);
+  const activePointerIdRef = useRef<number | null>(null);
+
 
   useEffect(() => {
     return () => {
@@ -39,6 +41,7 @@ const Card = ({
     rafRef.current = null;
     startRef.current = null;
     completedRef.current = false;
+    activePointerIdRef.current = null;
     setHoldingChoice(null);
     setHoldProgress(0);
     onHoverChoice?.(null);
@@ -49,14 +52,20 @@ const Card = ({
     }
   };
 
-  const startHolding = (choice: "a" | "b") => {
+  const startHolding = (
+    choice: "a" | "b",
+    event: React.PointerEvent<HTMLButtonElement>,
+  ) => {
     if (disabled) return;
     if (holdingChoice !== null) return;
 
     completedRef.current = false;
+    activePointerIdRef.current = event.pointerId;
+    event.currentTarget.setPointerCapture(event.pointerId);
     startRef.current = performance.now();
     setHoldingChoice(choice);
     setHoldProgress(0);
+    onHoverChoice?.(choice);
 
     const audioNode = playSound("button_hold");
     if (audioNode) {
@@ -115,10 +124,16 @@ const Card = ({
             onHoverChoice?.("a");
           }}
           onBlur={() => onHoverChoice?.(null)}
-          onPointerDown={() => startHolding("a")}
-          onPointerUp={() => stopHolding()}
-          onPointerCancel={() => stopHolding()}
-          onPointerLeave={() => stopHolding()}
+          onPointerDown={(event) => startHolding("a", event)}
+          onPointerUp={(event) => {
+            if (activePointerIdRef.current === event.pointerId) stopHolding();
+          }}
+          onPointerCancel={(event) => {
+            if (activePointerIdRef.current === event.pointerId) stopHolding();
+          }}
+          onLostPointerCapture={(event) => {
+            if (activePointerIdRef.current === event.pointerId) stopHolding();
+          }}
         >
           <span className={styles.decisionCardKicker}>Option A</span>
           <span className={styles.decisionCardText}>{decision_a}</span>
@@ -146,10 +161,16 @@ const Card = ({
             onHoverChoice?.("b");
           }}
           onBlur={() => onHoverChoice?.(null)}
-          onPointerDown={() => startHolding("b")}
-          onPointerUp={() => stopHolding()}
-          onPointerCancel={() => stopHolding()}
-          onPointerLeave={() => stopHolding()}
+          onPointerDown={(event) => startHolding("b", event)}
+          onPointerUp={(event) => {
+            if (activePointerIdRef.current === event.pointerId) stopHolding();
+          }}
+          onPointerCancel={(event) => {
+            if (activePointerIdRef.current === event.pointerId) stopHolding();
+          }}
+          onLostPointerCapture={(event) => {
+            if (activePointerIdRef.current === event.pointerId) stopHolding();
+          }}
         >
           <span className={styles.decisionCardKicker}>Option B</span>
           <span className={styles.decisionCardText}>{decision_b}</span>

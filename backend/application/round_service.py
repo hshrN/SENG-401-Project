@@ -4,6 +4,7 @@ Uses domain (apply_choice_impacts, is_game_over, compute_final_score) and infras
 """
 
 from datetime import datetime
+from application.game_settings import normalize_target_questions
 from domain.game import apply_choice_impacts, is_game_over, compute_final_score
 from models import GameSession, Scenario, GameRound, db
 
@@ -16,7 +17,12 @@ class RoundError(Exception):
         super().__init__(message)
 
 
-def round_submit(session_id: int, scenario_id: int, choice_made: str) -> dict:
+def round_submit(
+    session_id: int,
+    scenario_id: int,
+    choice_made: str,
+    target_questions: int | None = None,
+) -> dict:
     """
     Apply the player's choice to the session metrics, persist the round, and optionally end the game.
     choice_made must be 'a' or 'b'.
@@ -29,6 +35,12 @@ def round_submit(session_id: int, scenario_id: int, choice_made: str) -> dict:
     scenario = Scenario.query.get(scenario_id)
     if not session or not scenario:
         raise RoundError("Session or scenario not found", 404)
+
+    total_scenarios = Scenario.query.count()
+    try:
+        normalized_target_questions = normalize_target_questions(target_questions, total_scenarios)
+    except ValueError as e:
+        raise RoundError(str(e), 400)
 
     biosphere, society, economy = apply_choice_impacts(
         session.biosphere,
@@ -64,6 +76,8 @@ def round_submit(session_id: int, scenario_id: int, choice_made: str) -> dict:
         "society": society,
         "economy": economy,
         "game_over": game_over,
+        "completed_questions": round_count,
+        "target_questions": normalized_target_questions,
     }
 
     if game_over:
@@ -71,6 +85,14 @@ def round_submit(session_id: int, scenario_id: int, choice_made: str) -> dict:
         session.ended_at = datetime.utcnow()
         session.final_score = compute_final_score(biosphere, society, economy, round_count)
         response["final_score"] = session.final_score
+        response["game_result"] = "failed"
+    elif round_count >= normalized_target_questions:
+        session.status = "ended"
+        session.ended_at = datetime.utcnow()
+        session.final_score = compute_final_score(biosphere, society, economy, round_count)
+        response["game_over"] = True
+        response["final_score"] = session.final_score
+        response["game_result"] = "completed"
 
     db.session.commit()
     return response

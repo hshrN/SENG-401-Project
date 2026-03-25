@@ -15,9 +15,10 @@ from argon2.exceptions import VerifyMismatchError, VerificationError
 from models import db, Player, GameSession, Scenario, GameRound
 from application.auth_service import auth_login, auth_signup, AuthError
 from application.session_service import session_create, SessionError
-from application.scenario_service import scenario_get_next, ScenarioError
+from application.scenario_service import scenario_get_next, scenario_get_settings, ScenarioError
 from application.round_service import round_submit, RoundError
 from application.leaderboard_service import get_leaderboard, LeaderboardError
+from application.ai_service import generate_scenarios, AIServiceError
 
 load_dotenv()
 
@@ -80,25 +81,46 @@ def signup():
 def create_session():
     data = request.get_json(silent=True) or {}
     username = (data.get("username") or "").strip()
+    target_questions = data.get("target_questions")
 
     try:
-        result = session_create(username)
+        result = session_create(username, target_questions)
         return jsonify(result), 201
     except SessionError as e:
         return jsonify({"error": e.message}), e.status_code
 
 
 # --- Scenarios ---
+@app.route("/api/scenarios/settings", methods=["GET"])
+def scenario_settings():
+    try:
+        result = scenario_get_settings()
+        return jsonify(result), 200
+    except ScenarioError as e:
+        return jsonify({"error": e.message}), e.status_code
+
+
 @app.route("/api/scenarios/next", methods=["GET"])
 def next_scenario():
     session_id = request.args.get("session_id", type=int)
 
     try:
         result = scenario_get_next(session_id)
-        if result is None:
-            return jsonify({"game_over": True}), 404
+        if result.get("game_over"):
+            return jsonify(result), 410
         return jsonify(result), 200
     except ScenarioError as e:
+        return jsonify({"error": e.message}), e.status_code
+
+
+@app.route("/api/scenarios/generate", methods=["POST"])
+def generate_ai_scenarios():
+    data = request.get_json(silent=True) or {}
+    count = data.get("count", 5)
+    try:
+        created = generate_scenarios(count)
+        return jsonify({"created": len(created), "scenarios": created}), 201
+    except AIServiceError as e:
         return jsonify({"error": e.message}), e.status_code
 
 
@@ -109,9 +131,10 @@ def submit_round():
     session_id = data.get("session_id")
     scenario_id = data.get("scenario_id")
     choice_made = (data.get("choice_made") or "").strip().lower()
+    target_questions = data.get("target_questions")
 
     try:
-        result = round_submit(session_id, scenario_id, choice_made)
+        result = round_submit(session_id, scenario_id, choice_made, target_questions)
         return jsonify(result), 200
     except RoundError as e:
         return jsonify({"error": e.message}), e.status_code

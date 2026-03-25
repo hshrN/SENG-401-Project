@@ -13,6 +13,7 @@ import {
   Handshake,
   Leaf,
   Radio,
+  Trophy,
   Users,
   Volume2,
   VolumeX,
@@ -27,10 +28,13 @@ import { useAuth } from "../context/AuthContext";
 import { useAudio } from "../context/AudioContext";
 import {
   createSession,
+  getScenarioSettings,
   getNextCard,
   submitRound,
+  generateScenarios,
   type SessionResponse,
   type CardResponse,
+  type ScenarioSettingsResponse,
 } from "../application/gameService";
 import { getCardFaceIndex } from "../utils/cardFaceState";
 import { StateImageCarousel } from "../components/stateImageCarousel";
@@ -120,6 +124,72 @@ function worldStateZoneLabel(zone: "critical" | "warning" | "healthy"): string {
 /** Time to show scenario transmission before world state + decisions (ms). */
 const SCENARIO_READ_MS = 2000;
 
+type GameResultState = "failed" | "completed";
+
+type ScenarioCompletionError = Error & {
+  game_result?: GameResultState;
+  final_score?: number;
+  completed_questions?: number;
+  target_questions?: number;
+};
+
+type ImpactTone = "positive" | "negative" | "mixed";
+
+type ImpactBadge = {
+  label: "Biosphere" | "Society" | "Economy";
+  delta: number;
+  x: number;
+  y: number;
+};
+
+type ImpactBurstState = {
+  id: number;
+  tone: ImpactTone;
+  totalDelta: number;
+  badges: ImpactBadge[];
+};
+
+const IMPACT_PARTICLES = Array.from({ length: 14 }, (_, index) => {
+  const angle = -Math.PI / 2 + (Math.PI * 2 * index) / 14;
+  const distance = index % 2 === 0 ? 138 : 96;
+  return {
+    x: Math.cos(angle) * distance,
+    y: Math.sin(angle) * distance,
+    rotate: (angle * 180) / Math.PI,
+    delay: index * 0.025,
+    scale: index % 3 === 0 ? 1.15 : 0.85,
+  };
+});
+
+const VICTORY_CONFETTI = Array.from({ length: 28 }, (_, index) => {
+  const palette = ["#22c55e", "#86efac", "#facc15", "#60a5fa", "#fb7185", "#34d399"];
+  return {
+    left: `${(index * 17) % 100}%`,
+    top: `${-18 - (index % 5) * 16}px`,
+    width: `${8 + (index % 3) * 4}px`,
+    height: `${16 + (index % 4) * 5}px`,
+    color: palette[index % palette.length],
+    delay: `${(index % 7) * 0.18}s`,
+    duration: `${3.8 + (index % 5) * 0.35}s`,
+    swayDuration: `${1.2 + (index % 4) * 0.18}s`,
+  };
+});
+
+function getImpactTone(deltas: number[]): ImpactTone {
+  const gains = deltas.filter((delta) => delta > 0).length;
+  const losses = deltas.filter((delta) => delta < 0).length;
+
+  if (gains > 0 && losses === 0) return "positive";
+  if (losses > 0 && gains === 0) return "negative";
+  return "mixed";
+}
+
+function getImpactHeadline(tone: ImpactTone, totalDelta: number): string {
+  if (tone === "positive") return totalDelta >= 10 ? "Coalition Surge" : "Systems Up";
+  if (tone === "negative") return totalDelta <= -10 ? "Shockwave" : "Systems Hit";
+  return totalDelta >= 0 ? "Trade-Off" : "Heavy Cost";
+}
+
 const Game = () => {
   const { user } = useAuth();
   const { isMuted, playSound, startBgm, stopBgm, setBgmSpeed, toggleMute } =
@@ -129,6 +199,8 @@ const Game = () => {
   const [currentCard, setCurrentCard] = useState<CardResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [choiceDisabled, setChoiceDisabled] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generateMsg, setGenerateMsg] = useState<string | null>(null);
 
   const [biosphere, setBiosphere] = useState(50);
   const [society, setSociety] = useState(50);
@@ -138,8 +210,14 @@ const Game = () => {
   const [showDecisionCard, setShowDecisionCard] = useState(true);
   const [hoveredChoice, setHoveredChoice] = useState<"a" | "b" | null>(null);
   const [gameOver, setGameOver] = useState(false);
+  const [gameResult, setGameResult] = useState<GameResultState | null>(null);
   const [finalScore, setFinalScore] = useState<number | null>(null);
+  const [questionsCompleted, setQuestionsCompleted] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [scenarioSettings, setScenarioSettings] =
+    useState<ScenarioSettingsResponse | null>(null);
+  const [selectedQuestionCount, setSelectedQuestionCount] = useState(20);
+  const [impactBurst, setImpactBurst] = useState<ImpactBurstState | null>(null);
   const [previousCard, setPreviousCard] = useState<{
     scenario_text: string;
     decision_a: string;
@@ -159,8 +237,43 @@ const Game = () => {
   } | null>(null);
   /** After each new scenario loads: false until SCENARIO_READ_MS so players read the card first. */
   const [scenarioReady, setScenarioReady] = useState(false);
+  const impactTimeoutRef = React.useRef<number | null>(null);
 
   const navigate = useNavigate();
+
+  const applyScenarioSettings = useCallback(
+    (settings: ScenarioSettingsResponse) => {
+      setScenarioSettings(settings);
+      setSelectedQuestionCount((current) => {
+        const preferred = current > 0 ? current : settings.default_questions;
+        return Math.max(
+          settings.min_questions,
+          Math.min(settings.max_questions, preferred),
+        );
+      });
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (session) return;
+
+    let active = true;
+    void (async () => {
+      try {
+        const settings = await getScenarioSettings();
+        if (!active) return;
+        applyScenarioSettings(settings);
+      } catch (err: unknown) {
+        if (!active) return;
+        setError((err as Error).message);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [session, applyScenarioSettings]);
 
   useLayoutEffect(() => {
     if (!currentCard) {
@@ -173,7 +286,7 @@ const Game = () => {
       SCENARIO_READ_MS,
     );
     return () => window.clearTimeout(id);
-  }, [currentCard?.scenario_id]);
+  }, [currentCard]);
 
   /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
@@ -221,6 +334,9 @@ const Game = () => {
   useEffect(() => {
     return () => {
       stopBgm();
+      if (impactTimeoutRef.current !== null) {
+        window.clearTimeout(impactTimeoutRef.current);
+      }
     };
   }, [stopBgm]);
 
@@ -229,6 +345,55 @@ const Game = () => {
     setShowTutorial(false);
   };
 
+  const queueImpactBurst = useCallback(
+    (nextBiosphere: number, nextSociety: number, nextEconomy: number) => {
+      const rawBadges = [
+        { label: "Biosphere" as const, delta: nextBiosphere - biosphere },
+        { label: "Society" as const, delta: nextSociety - society },
+        { label: "Economy" as const, delta: nextEconomy - economy },
+      ].filter((badge) => badge.delta !== 0);
+
+      if (rawBadges.length === 0) return;
+
+      const spread =
+        rawBadges.length === 1
+          ? [0]
+          : rawBadges.length === 2
+            ? [-92, 92]
+            : [-122, 0, 122];
+
+      const badges: ImpactBadge[] = rawBadges.map((badge, index) => ({
+        ...badge,
+        x: spread[index],
+        y:
+          rawBadges.length === 3 && index === 1
+            ? -104
+            : -46 - (index % 2) * 18,
+      }));
+
+      const totalDelta = rawBadges.reduce(
+        (sum, badge) => sum + badge.delta,
+        0,
+      );
+
+      if (impactTimeoutRef.current !== null) {
+        window.clearTimeout(impactTimeoutRef.current);
+      }
+
+      setImpactBurst({
+        id: Date.now(),
+        tone: getImpactTone(rawBadges.map((badge) => badge.delta)),
+        totalDelta,
+        badges,
+      });
+
+      impactTimeoutRef.current = window.setTimeout(() => {
+        setImpactBurst(null);
+      }, 1350);
+    },
+    [biosphere, society, economy],
+  );
+
   const handleStart = async () => {
     playSound("game_start");
     const username = user?.username?.trim();
@@ -236,14 +401,27 @@ const Game = () => {
       setError("You must be logged in to start a game.");
       return;
     }
+    if (!scenarioSettings) {
+      setError("Mission settings are still loading. Please wait a moment.");
+      return;
+    }
     setIsLoading(true);
     setError(null);
     try {
-      const newSession = await createSession(username);
+      const newSession = await createSession(username, selectedQuestionCount);
+      if (impactTimeoutRef.current !== null) {
+        window.clearTimeout(impactTimeoutRef.current);
+        impactTimeoutRef.current = null;
+      }
       setSession(newSession);
       setBiosphere(newSession.biosphere);
       setSociety(newSession.society);
       setEconomy(newSession.economy);
+      setQuestionsCompleted(0);
+      setGameOver(false);
+      setGameResult(null);
+      setFinalScore(null);
+      setImpactBurst(null);
       setPreviousCard(null);
       setPreviousDecisionText(null);
       setShowPreviousCardPopup(false);
@@ -257,6 +435,21 @@ const Game = () => {
     }
   };
 
+  const handleGenerate = async () => {
+    setIsGenerating(true);
+    setGenerateMsg(null);
+    try {
+      const result = await generateScenarios(5);
+      setGenerateMsg(`Generated ${result.created} new scenarios!`);
+      const settings = await getScenarioSettings();
+      applyScenarioSettings(settings);
+    } catch (err: unknown) {
+      setGenerateMsg((err as Error).message);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const loadCardForSession = useCallback(
     async (session_id: number) => {
       setIsLoading(true);
@@ -264,15 +457,31 @@ const Game = () => {
       try {
         const card = await getNextCard(session_id);
         setCurrentCard(card);
-      } catch {
-        setGameOver(true);
+      } catch (err: unknown) {
+        const completion = err as ScenarioCompletionError;
+        if (completion.game_result === "completed") {
+          setQuestionsCompleted(
+            completion.completed_questions ??
+              completion.target_questions ??
+              selectedQuestionCount,
+          );
+          setGameResult("completed");
+          setGameOver(true);
+          setFinalScore(completion.final_score ?? null);
+          setCurrentCard(null);
+        } else {
+          setGameResult("failed");
+          setGameOver(true);
+          setError(completion.message || "Failed to load the next scenario.");
+        }
         stopBgm();
         playSound("crash");
       } finally {
         setIsLoading(false);
       }
     },
-    [stopBgm, playSound],
+    [selectedQuestionCount, stopBgm, playSound],
+
   );
 
   const fetchNextCard = useCallback(
@@ -306,12 +515,21 @@ const Game = () => {
         session.session_id,
         currentCard.scenario_id,
         choice,
+        session.target_questions,
       );
+      queueImpactBurst(result.biosphere, result.society, result.economy);
       setBiosphere(result.biosphere);
       setSociety(result.society);
       setEconomy(result.economy);
+      setQuestionsCompleted(result.completed_questions);
 
       if (result.game_over) {
+        if (impactTimeoutRef.current !== null) {
+          window.clearTimeout(impactTimeoutRef.current);
+          impactTimeoutRef.current = null;
+        }
+        setImpactBurst(null);
+        setGameResult(result.game_result ?? "failed");
         setGameOver(true);
         setFinalScore(result.final_score ?? null);
         stopBgm();
@@ -346,10 +564,19 @@ const Game = () => {
 
   const handleRestart = () => {
     playSound("button_click");
+    if (impactTimeoutRef.current !== null) {
+      window.clearTimeout(impactTimeoutRef.current);
+      impactTimeoutRef.current = null;
+    }
     setSession(null);
     setCurrentCard(null);
     setGameOver(false);
+    setGameResult(null);
     setFinalScore(null);
+    setQuestionsCompleted(0);
+    setImpactBurst(null);
+    setChoiceDisabled(false);
+    setGenerateMsg(null);
     setHoveredChoice(null);
     setBiosphere(50);
     setSociety(50);
@@ -363,22 +590,41 @@ const Game = () => {
   };
 
   const MetricBar = ({ label, value }: { label: string; value: number }) => {
-    const isLow = value <= 30;
+    let fillClass = styles.metricFillHealthy;
+    let valueClass = styles.metricValueHealthy;
+
+    if (value <= 20) {
+      fillClass = styles.metricFillCritical;
+      valueClass = styles.metricValueCritical;
+    } else if (value <= 45) {
+      fillClass = styles.metricFillWarning;
+      valueClass = styles.metricValueWarning;
+    }
+
     return (
       <div className={styles.metricRow}>
         <div className={styles.metricLabel}>
           <span>{label}</span>
-          <span className={styles.metricValue}>{value}</span>
+          <span className={`${styles.metricValue} ${valueClass}`}>{value}</span>
         </div>
         <div className={styles.metricTrack}>
           <div
-            className={`${styles.metricFill} ${isLow ? styles.metricFillLow : styles.metricFillHigh}`}
+            className={`${styles.metricFill} ${fillClass}`}
             style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
           />
         </div>
       </div>
     );
   };
+
+  const missionQuestionCount = session?.target_questions ?? selectedQuestionCount;
+  const isVictory = gameResult === "completed";
+  const completedQuestionCount =
+    isVictory
+      ? questionsCompleted > 0
+        ? questionsCompleted
+        : missionQuestionCount
+      : questionsCompleted;
 
   if (!session) {
     return (
@@ -443,18 +689,84 @@ const Game = () => {
               </div>
             </div>
 
+
             <div className={styles.startCta}>
               <button
                 type="button"
                 className={styles.primaryBtn}
                 onClick={handleStart}
-                disabled={isLoading}
+                disabled={isLoading || !scenarioSettings}
               >
-                {isLoading ? "Initializing run…" : "Begin mission"}
+                {isLoading
+                  ? "Initializing run…"
+                  : !scenarioSettings
+                    ? "Loading mission settings…"
+                    : "Begin mission"}
               </button>
+              <button
+                type="button"
+                className={styles.secondaryBtn}
+                onClick={handleGenerate}
+                disabled={isGenerating}
+              >
+                {isGenerating ? "Generating…" : "Generate New Scenarios (AI)"}
+              </button>
+              {generateMsg && <p className={styles.generateMsg}>{generateMsg}</p>}
               <p className={styles.startCtaHint}>
-                New session · scenario deck loaded
+                Mission length · {selectedQuestionCount} cards selected
               </p>
+            </div>
+
+            
+            <div className={styles.startSettingsBox}>
+              <div className={styles.startSettingsHeader}>
+                <div>
+                  <h2 className={styles.startSettingsTitle}>Mission settings</h2>
+                  <p className={styles.startSettingsText}>
+                    Choose how many scenario cards this run should last.
+                  </p>
+                </div>
+                {scenarioSettings && (
+                  <span className={styles.startSettingsBadge}>
+                    {selectedQuestionCount} cards
+                  </span>
+                )}
+              </div>
+
+              {scenarioSettings ? (
+                <>
+                  <div className={styles.startSettingsScale}>
+                    <span>Min {scenarioSettings.min_questions}</span>
+                    <span>Default {scenarioSettings.default_questions}</span>
+                    <span>Max {scenarioSettings.max_questions}</span>
+                  </div>
+                  <label
+                    className={styles.startSliderLabel}
+                    htmlFor="question-count"
+                  >
+                    Question count
+                  </label>
+                  <input
+                    id="question-count"
+                    className={styles.startSlider}
+                    type="range"
+                    min={scenarioSettings.min_questions}
+                    max={scenarioSettings.max_questions}
+                    value={selectedQuestionCount}
+                    onChange={(e) => {
+                      setSelectedQuestionCount(Number(e.target.value));
+                    }}
+                  />
+                  <p className={styles.startSettingsHint}>
+                    Finish {selectedQuestionCount} cards with all three metrics
+                    above zero to complete the mission.
+                  </p>
+                </>
+              ) : (
+                <p className={styles.startSettingsHint}>
+                  Loading mission settings…
+                </p>
+              )}
             </div>
             {error && <p className={styles.error}>{error}</p>}
           </motion.div>
@@ -468,6 +780,27 @@ const Game = () => {
     return (
       <div className={styles.container}>
         <GradientBackground idPrefix="game" />
+        {isVictory && (
+          <div className={styles.confettiLayer} aria-hidden>
+            {VICTORY_CONFETTI.map((piece, index) => (
+              <span
+                key={index}
+                className={styles.confettiPiece}
+                style={
+                  {
+                    left: piece.left,
+                    top: piece.top,
+                    width: piece.width,
+                    height: piece.height,
+                    background: piece.color,
+                    animationDelay: `${piece.delay}, ${piece.delay}`,
+                    animationDuration: `${piece.duration}, ${piece.swayDuration}`,
+                  } as React.CSSProperties
+                }
+              />
+            ))}
+          </div>
+        )}
         <GlobalNav backClassName={styles.backLink} />
         <div className={styles.content}>
           <motion.div
@@ -485,12 +818,27 @@ const Game = () => {
             </div>
 
             <div className={styles.startHero}>
-              <div className={styles.startIconRing} aria-hidden>
-                <AlertTriangle size={28} strokeWidth={1.75} />
+              <div
+                className={`${styles.startIconRing} ${
+                  isVictory
+                    ? styles.startIconRingSuccess
+                    : styles.startIconRingFailure
+                }`}
+                aria-hidden
+              >
+                {isVictory ? (
+                  <Trophy size={28} strokeWidth={1.75} />
+                ) : (
+                  <AlertTriangle size={28} strokeWidth={1.75} />
+                )}
               </div>
-              <h1 className={styles.startTitle}>Game Over</h1>
+              <h1 className={styles.startTitle}>
+                {isVictory ? "Mission Complete" : "Game Over"}
+              </h1>
               <p className={styles.startTagline}>
-                One of your metrics collapsed — global coordination failed.
+                {isVictory
+                  ? "You kept the coalition stable and finished your selected mission with strong global balance."
+                  : "One of your metrics collapsed, so the coalition lost stability before the mission was complete."}
               </p>
             </div>
 
@@ -499,6 +847,12 @@ const Game = () => {
                 Final score: <strong>{finalScore}</strong>
               </p>
             )}
+
+            <p className={styles.startOutcomeLine}>
+              {isVictory
+                ? `Completed ${completedQuestionCount} of ${missionQuestionCount} cards. Excellent work keeping the systems in balance.`
+                : `You reached ${completedQuestionCount} of ${missionQuestionCount} cards before collapse.`}
+            </p>
 
             <div className={styles.startHud}>
               <span className={styles.startHudLabel}>Final readings</span>
@@ -515,7 +869,7 @@ const Game = () => {
                 className={styles.primaryBtn}
                 onClick={handleRestart}
               >
-                Play again
+                {isVictory ? "Run another mission" : "Try again"}
               </button>
               <button
                 type="button"
@@ -528,7 +882,9 @@ const Game = () => {
                 View leaderboard
               </button>
               <p className={styles.startCtaHint}>
-                New run · scenario deck loaded
+                {isVictory
+                  ? "Victory logged · leaderboard ready"
+                  : "New run · scenario deck loaded"}
               </p>
             </div>
           </motion.div>
@@ -612,6 +968,121 @@ const Game = () => {
           </div>
 
           <div className={styles.overlayCenter}>
+            <AnimatePresence>
+              {impactBurst && (
+                <motion.div
+                  key={impactBurst.id}
+                  className={styles.impactBurstOverlay}
+                  initial={{ opacity: 0, scale: 0.72 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.12 }}
+                  transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                  aria-hidden
+                >
+                  <motion.div
+                    className={`${styles.impactBurstAura} ${
+                      impactBurst.tone === "positive"
+                        ? styles.impactBurstAuraPositive
+                        : impactBurst.tone === "negative"
+                          ? styles.impactBurstAuraNegative
+                          : styles.impactBurstAuraMixed
+                    }`}
+                    initial={{ opacity: 0, scale: 0.4 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 1.18 }}
+                    transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+                  />
+
+                  <div className={styles.impactParticleField}>
+                    {IMPACT_PARTICLES.map((particle, index) => (
+                      <motion.span
+                        key={index}
+                        className={`${styles.impactParticle} ${
+                          impactBurst.tone === "positive"
+                            ? styles.impactParticlePositive
+                            : impactBurst.tone === "negative"
+                              ? styles.impactParticleNegative
+                              : styles.impactParticleMixed
+                        }`}
+                        initial={{
+                          opacity: 0,
+                          scale: 0.15,
+                          x: 0,
+                          y: 0,
+                          rotate: particle.rotate - 18,
+                        }}
+                        animate={{
+                          opacity: [0, 1, 0],
+                          scale: [0.15, particle.scale, 0.35],
+                          x: particle.x,
+                          y: particle.y,
+                          rotate: particle.rotate + 18,
+                        }}
+                        transition={{
+                          duration: 0.8,
+                          delay: particle.delay,
+                          ease: "easeOut",
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  <motion.div
+                    className={`${styles.impactVerdict} ${
+                      impactBurst.tone === "positive"
+                        ? styles.impactVerdictPositive
+                        : impactBurst.tone === "negative"
+                          ? styles.impactVerdictNegative
+                          : styles.impactVerdictMixed
+                    }`}
+                    initial={{ opacity: 0, y: 18, scale: 0.75 }}
+                    animate={{
+                      opacity: [0, 1, 1, 0],
+                      y: [18, 0, -8, -18],
+                      scale: [0.75, 1.08, 1, 0.95],
+                    }}
+                    transition={{ duration: 1.05, ease: "easeOut" }}
+                  >
+                    {getImpactHeadline(impactBurst.tone, impactBurst.totalDelta)}
+                  </motion.div>
+
+                  {impactBurst.badges.map((badge, index) => (
+                    <motion.div
+                      key={`${impactBurst.id}-${badge.label}`}
+                      className={`${styles.impactChip} ${
+                        badge.delta > 0
+                          ? styles.impactChipGain
+                          : styles.impactChipLoss
+                      }`}
+                      initial={{
+                        opacity: 0,
+                        scale: 0.42,
+                        x: 0,
+                        y: 0,
+                        rotate: badge.delta > 0 ? -8 : 8,
+                      }}
+                      animate={{
+                        opacity: [0, 1, 1, 0],
+                        scale: [0.42, 1.1, 1, 0.92],
+                        x: [0, badge.x * 0.7, badge.x, badge.x * 1.08],
+                        y: [0, badge.y * 0.5, badge.y, badge.y - 8],
+                        rotate: [badge.delta > 0 ? -8 : 8, 0, 0, badge.delta > 0 ? 5 : -5],
+                      }}
+                      transition={{
+                        duration: 1.15,
+                        delay: index * 0.06,
+                        ease: [0.22, 1, 0.36, 1],
+                      }}
+                    >
+                      <span className={styles.impactChipValue}>
+                        {badge.delta > 0 ? `+${badge.delta}` : `${badge.delta}`}
+                      </span>
+                      <span className={styles.impactChipLabel}>{badge.label}</span>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
             <ScoreOrbit
               items={[
                 { id: 1, name: "Biosphere", value: biosphere },

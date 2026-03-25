@@ -98,6 +98,203 @@
   filter: blur(0.5px);
 }
 
+.confettiLayer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 8;
+}
+
+.confettiPiece {
+  position: absolute;
+  border-radius: 4px;
+  opacity: 0;
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.12);
+  animation-name: confettiFall, confettiSway;
+  animation-timing-function: linear, ease-in-out;
+  animation-iteration-count: infinite, infinite;
+}
+
+@keyframes confettiFall {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -8vh, 0) rotate(0deg);
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.95;
+    transform: translate3d(0, 115vh, 0) rotate(540deg);
+  }
+}
+
+@keyframes confettiSway {
+  0% {
+    margin-left: -10px;
+  }
+  100% {
+    margin-left: 10px;
+  }
+}
+
+.impactBurstOverlay {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 430px;
+  height: 320px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 25;
+  overflow: visible;
+}
+
+.impactBurstAura {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 200px;
+  height: 200px;
+  transform: translate(-50%, -50%);
+  filter: blur(6px);
+  opacity: 0.95;
+}
+
+.impactBurstAuraPositive {
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(187, 247, 208, 0.95) 0%, rgba(34, 197, 94, 0.3) 36%, rgba(34, 197, 94, 0) 70%),
+    conic-gradient(from 180deg, rgba(52, 211, 153, 0) 0deg, rgba(52, 211, 153, 0.72) 52deg, rgba(255, 255, 255, 0.08) 90deg, rgba(52, 211, 153, 0) 160deg);
+  box-shadow: 0 0 90px rgba(34, 197, 94, 0.28);
+}
+
+.impactBurstAuraNegative {
+  border-radius: 45% 55% 62% 38% / 38% 42% 58% 62%;
+  background:
+    radial-gradient(circle at 45% 40%, rgba(254, 202, 202, 0.92) 0%, rgba(248, 113, 113, 0.28) 30%, rgba(127, 29, 29, 0.6) 56%, rgba(127, 29, 29, 0) 76%),
+    radial-gradient(circle at 68% 58%, rgba(239, 68, 68, 0.55) 0%, rgba(127, 29, 29, 0) 56%);
+  box-shadow: 0 0 92px rgba(248, 113, 113, 0.24);
+}
+
+.impactBurstAuraMixed {
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(253, 230, 138, 0.9) 0%, rgba(245, 158, 11, 0.26) 34%, rgba(245, 158, 11, 0) 68%),
+    radial-gradient(circle at 62% 42%, rgba(134, 239, 172, 0.42) 0%, rgba(52, 211, 153, 0) 46%);
+  box-shadow: 0 0 84px rgba(245, 158, 11, 0.22);
+}
+
+.impactParticleField {
+  position: absolute;
+  inset: 0;
+}
+
+.impactParticle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 44px;
+  border-radius: 999px;
+  transform-origin: center center;
+  opacity: 0;
+}
+
+.impactParticlePositive {
+  background: linear-gradient(180deg, rgba(220, 252, 231, 0.96), rgba(52, 211, 153, 0));
+  box-shadow: 0 0 18px rgba(34, 197, 94, 0.36);
+}
+
+.impactParticleNegative {
+  background: linear-gradient(180deg, rgba(254, 202, 202, 0.94), rgba(239, 68, 68, 0));
+  box-shadow: 0 0 18px rgba(248, 113, 113, 0.34);
+}
+
+.impactParticleMixed {
+  background: linear-gradient(180deg, rgba(254, 249, 195, 0.95), rgba(245, 158, 11, 0));
+  box-shadow: 0 0 18px rgba(245, 158, 11, 0.34);
+}
+
+.impactVerdict {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  transform: translate(-50%, -50%) skew(-8deg);
+  font-size: 1.08rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.55);
+}
+
+.impactVerdictPositive {
+  color: #dcfce7;
+}
+
+.impactVerdictNegative {
+  color: #fecaca;
+}
+
+.impactVerdictMixed {
+  color: #fef3c7;
+}
+
+.impactChip {
+  position: absolute;
+  left: 50%;
+  top: 54%;
+  transform: translate(-50%, -50%);
+  min-width: 114px;
+  padding: 0.55rem 0.7rem 0.5rem;
+  border-radius: 0.95rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.16rem;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 14px 32px -18px rgba(0, 0, 0, 0.72),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.impactChipGain {
+  background: linear-gradient(180deg, rgba(6, 95, 70, 0.88), rgba(3, 36, 27, 0.9));
+  border-color: rgba(52, 211, 153, 0.42);
+}
+
+.impactChipLoss {
+  background: linear-gradient(180deg, rgba(127, 29, 29, 0.9), rgba(56, 17, 17, 0.92));
+  border-color: rgba(248, 113, 113, 0.4);
+}
+
+.impactChipValue {
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.impactChipGain .impactChipValue {
+  color: #86efac;
+}
+
+.impactChipLoss .impactChipValue {
+  color: #fca5a5;
+}
+
+.impactChipLabel {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
 .commandBar {
   position: fixed;
   left: 50%;
@@ -449,6 +646,20 @@
   box-shadow: 0 0 28px rgba(34, 197, 94, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
+.startIconRingSuccess {
+  color: #bbf7d0;
+  background: radial-gradient(circle at 30% 30%, rgba(74, 222, 128, 0.35), rgba(0, 0, 0, 0.5));
+  border-color: rgba(74, 222, 128, 0.45);
+  box-shadow: 0 0 30px rgba(74, 222, 128, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.startIconRingFailure {
+  color: #fda4af;
+  background: radial-gradient(circle at 30% 30%, rgba(248, 113, 113, 0.3), rgba(0, 0, 0, 0.52));
+  border-color: rgba(248, 113, 113, 0.45);
+  box-shadow: 0 0 30px rgba(248, 113, 113, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
 .startTitle {
   margin: 0;
   font-size: 1.5rem;
@@ -487,6 +698,83 @@
   font-size: 0.84rem;
   line-height: 1.55;
   color: rgba(226, 232, 240, 0.92);
+}
+
+.startSettingsBox {
+  padding: 0.9rem 1rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.34), rgba(0, 0, 0, 0.28));
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.startSettingsHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.startSettingsTitle {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(220, 252, 231, 0.95);
+}
+
+.startSettingsText {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: rgba(226, 232, 240, 0.85);
+}
+
+.startSettingsBadge {
+  flex-shrink: 0;
+  padding: 0.3rem 0.65rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(74, 222, 128, 0.32);
+  background: rgba(34, 197, 94, 0.12);
+  color: #bbf7d0;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.startSettingsScale {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.56);
+}
+
+.startSliderLabel {
+  font-size: 0.67rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.startSlider {
+  width: 100%;
+  margin: 0;
+  accent-color: #22c55e;
+  cursor: pointer;
+}
+
+.startSettingsHint {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: rgba(226, 232, 240, 0.78);
 }
 
 .startHud {
@@ -564,6 +852,14 @@
   letter-spacing: -0.02em;
 }
 
+.startOutcomeLine {
+  margin: -0.35rem 0 0;
+  text-align: center;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: rgba(226, 232, 240, 0.84);
+}
+
 .startHudMetrics {
   display: flex;
   flex-direction: column;
@@ -576,6 +872,40 @@
   font-size: 0.72rem;
   color: rgba(255, 255, 255, 0.38);
   letter-spacing: 0.02em;
+}
+
+.secondaryBtn {
+  padding: 0.625rem 1.5rem;
+  border-radius: 9999px;
+  border: 1px solid var(--app-border);
+  background: transparent;
+  color: var(--app-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.secondaryBtn:hover:not(:disabled) {
+  color: var(--app-foreground);
+  border-color: var(--app-primary);
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.secondaryBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.generateMsg {
+  font-size: 0.8125rem;
+  color: var(--app-primary);
+  text-align: center;
+  margin: 0;
 }
 
 .primaryBtn {
@@ -661,6 +991,18 @@
   color: var(--app-foreground);
 }
 
+.metricValueHealthy {
+  color: #86efac;
+}
+
+.metricValueWarning {
+  color: #fde68a;
+}
+
+.metricValueCritical {
+  color: #fca5a5;
+}
+
 .metricTrack {
   height: 10px;
   border-radius: 9999px;
@@ -674,11 +1016,15 @@
   transition: width 0.3s ease;
 }
 
-.metricFillHigh {
+.metricFillHealthy {
   background: linear-gradient(90deg, #16a34a, var(--app-primary));
 }
 
-.metricFillLow {
+.metricFillWarning {
+  background: linear-gradient(90deg, #d97706, #facc15);
+}
+
+.metricFillCritical {
   background: linear-gradient(90deg, #b91c1c, #f87171);
 }
 
@@ -983,4 +1329,30 @@
 
 .worldStateHealthy .worldStateTextInner strong {
   color: #6ee7b7;
+}
+
+@media (max-width: 900px) {
+  .impactBurstOverlay {
+    width: 320px;
+    height: 250px;
+  }
+
+  .impactBurstAura {
+    width: 152px;
+    height: 152px;
+  }
+
+  .impactVerdict {
+    font-size: 0.84rem;
+    letter-spacing: 0.14em;
+  }
+
+  .impactChip {
+    min-width: 96px;
+    padding: 0.48rem 0.58rem 0.45rem;
+  }
+
+  .impactChipValue {
+    font-size: 0.9rem;
+  }
 }
