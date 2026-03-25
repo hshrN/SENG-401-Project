@@ -449,6 +449,20 @@
   box-shadow: 0 0 28px rgba(34, 197, 94, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
+.startIconRingSuccess {
+  color: #bbf7d0;
+  background: radial-gradient(circle at 30% 30%, rgba(74, 222, 128, 0.35), rgba(0, 0, 0, 0.5));
+  border-color: rgba(74, 222, 128, 0.45);
+  box-shadow: 0 0 30px rgba(74, 222, 128, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.startIconRingFailure {
+  color: #fda4af;
+  background: radial-gradient(circle at 30% 30%, rgba(248, 113, 113, 0.3), rgba(0, 0, 0, 0.52));
+  border-color: rgba(248, 113, 113, 0.45);
+  box-shadow: 0 0 30px rgba(248, 113, 113, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
 .startTitle {
   margin: 0;
   font-size: 1.5rem;
@@ -487,6 +501,83 @@
   font-size: 0.84rem;
   line-height: 1.55;
   color: rgba(226, 232, 240, 0.92);
+}
+
+.startSettingsBox {
+  padding: 0.9rem 1rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.34), rgba(0, 0, 0, 0.28));
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.startSettingsHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.startSettingsTitle {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(220, 252, 231, 0.95);
+}
+
+.startSettingsText {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: rgba(226, 232, 240, 0.85);
+}
+
+.startSettingsBadge {
+  flex-shrink: 0;
+  padding: 0.3rem 0.65rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(74, 222, 128, 0.32);
+  background: rgba(34, 197, 94, 0.12);
+  color: #bbf7d0;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.startSettingsScale {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.56);
+}
+
+.startSliderLabel {
+  font-size: 0.67rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.startSlider {
+  width: 100%;
+  margin: 0;
+  accent-color: #22c55e;
+  cursor: pointer;
+}
+
+.startSettingsHint {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: rgba(226, 232, 240, 0.78);
 }
 
 .startHud {
@@ -562,6 +653,14 @@
   font-weight: 800;
   color: #86efac;
   letter-spacing: -0.02em;
+}
+
+.startOutcomeLine {
+  margin: -0.35rem 0 0;
+  text-align: center;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: rgba(226, 232, 240, 0.84);
 }
 
 .startHudMetrics {
@@ -695,6 +794,18 @@
   color: var(--app-foreground);
 }
 
+.metricValueHealthy {
+  color: #86efac;
+}
+
+.metricValueWarning {
+  color: #fde68a;
+}
+
+.metricValueCritical {
+  color: #fca5a5;
+}
+
 .metricTrack {
   height: 10px;
   border-radius: 9999px;
@@ -708,11 +819,15 @@
   transition: width 0.3s ease;
 }
 
-.metricFillHigh {
+.metricFillHealthy {
   background: linear-gradient(90deg, #16a34a, var(--app-primary));
 }
 
-.metricFillLow {
+.metricFillWarning {
+  background: linear-gradient(90deg, #d97706, #facc15);
+}
+
+.metricFillCritical {
   background: linear-gradient(90deg, #b91c1c, #f87171);
 }
 

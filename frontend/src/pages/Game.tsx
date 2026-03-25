@@ -13,6 +13,7 @@ import {
   Handshake,
   Leaf,
   Radio,
+  Trophy,
   Users,
   Volume2,
   VolumeX,
@@ -27,11 +28,13 @@ import { useAuth } from "../context/AuthContext";
 import { useAudio } from "../context/AudioContext";
 import {
   createSession,
+  getScenarioSettings,
   getNextCard,
   submitRound,
   generateScenarios,
   type SessionResponse,
   type CardResponse,
+  type ScenarioSettingsResponse,
 } from "../application/gameService";
 import { getCardFaceIndex } from "../utils/cardFaceState";
 import { StateImageCarousel } from "../components/stateImageCarousel";
@@ -121,6 +124,15 @@ function worldStateZoneLabel(zone: "critical" | "warning" | "healthy"): string {
 /** Time to show scenario transmission before world state + decisions (ms). */
 const SCENARIO_READ_MS = 2000;
 
+type GameResultState = "failed" | "completed";
+
+type ScenarioCompletionError = Error & {
+  game_result?: GameResultState;
+  final_score?: number;
+  completed_questions?: number;
+  target_questions?: number;
+};
+
 const Game = () => {
   const { user } = useAuth();
   const { isMuted, playSound, startBgm, stopBgm, setBgmSpeed, toggleMute } =
@@ -141,8 +153,13 @@ const Game = () => {
   const [showDecisionCard, setShowDecisionCard] = useState(true);
   const [hoveredChoice, setHoveredChoice] = useState<"a" | "b" | null>(null);
   const [gameOver, setGameOver] = useState(false);
+  const [gameResult, setGameResult] = useState<GameResultState | null>(null);
   const [finalScore, setFinalScore] = useState<number | null>(null);
+  const [questionsCompleted, setQuestionsCompleted] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [scenarioSettings, setScenarioSettings] =
+    useState<ScenarioSettingsResponse | null>(null);
+  const [selectedQuestionCount, setSelectedQuestionCount] = useState(20);
   const [previousCard, setPreviousCard] = useState<{
     scenario_text: string;
     decision_a: string;
@@ -165,6 +182,40 @@ const Game = () => {
 
   const navigate = useNavigate();
 
+  const applyScenarioSettings = useCallback(
+    (settings: ScenarioSettingsResponse) => {
+      setScenarioSettings(settings);
+      setSelectedQuestionCount((current) => {
+        const preferred = current > 0 ? current : settings.default_questions;
+        return Math.max(
+          settings.min_questions,
+          Math.min(settings.max_questions, preferred),
+        );
+      });
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (session) return;
+
+    let active = true;
+    void (async () => {
+      try {
+        const settings = await getScenarioSettings();
+        if (!active) return;
+        applyScenarioSettings(settings);
+      } catch (err: unknown) {
+        if (!active) return;
+        setError((err as Error).message);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [session, applyScenarioSettings]);
+
   useLayoutEffect(() => {
     if (!currentCard) {
       setScenarioReady(false);
@@ -176,7 +227,7 @@ const Game = () => {
       SCENARIO_READ_MS,
     );
     return () => window.clearTimeout(id);
-  }, [currentCard?.scenario_id]);
+  }, [currentCard]);
 
   /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
@@ -239,14 +290,22 @@ const Game = () => {
       setError("You must be logged in to start a game.");
       return;
     }
+    if (!scenarioSettings) {
+      setError("Mission settings are still loading. Please wait a moment.");
+      return;
+    }
     setIsLoading(true);
     setError(null);
     try {
-      const newSession = await createSession(username);
+      const newSession = await createSession(username, selectedQuestionCount);
       setSession(newSession);
       setBiosphere(newSession.biosphere);
       setSociety(newSession.society);
       setEconomy(newSession.economy);
+      setQuestionsCompleted(0);
+      setGameOver(false);
+      setGameResult(null);
+      setFinalScore(null);
       setPreviousCard(null);
       setPreviousDecisionText(null);
       setShowPreviousCardPopup(false);
@@ -266,6 +325,8 @@ const Game = () => {
     try {
       const result = await generateScenarios(5);
       setGenerateMsg(`Generated ${result.created} new scenarios!`);
+      const settings = await getScenarioSettings();
+      applyScenarioSettings(settings);
     } catch (err: unknown) {
       setGenerateMsg((err as Error).message);
     } finally {
@@ -280,14 +341,29 @@ const Game = () => {
       try {
         const card = await getNextCard(session_id);
         setCurrentCard(card);
-      } catch {
-        setGameOver(true);
+      } catch (err: unknown) {
+        const completion = err as ScenarioCompletionError;
+        if (completion.game_result === "completed") {
+          setQuestionsCompleted(
+            completion.completed_questions ??
+              completion.target_questions ??
+              selectedQuestionCount,
+          );
+          setGameResult("completed");
+          setGameOver(true);
+          setFinalScore(completion.final_score ?? null);
+          setCurrentCard(null);
+        } else {
+          setGameResult("failed");
+          setGameOver(true);
+          setError(completion.message || "Failed to load the next scenario.");
+        }
         stopBgm();
       } finally {
         setIsLoading(false);
       }
     },
-    [stopBgm],
+    [selectedQuestionCount, stopBgm],
   );
 
   const fetchNextCard = useCallback(
@@ -321,12 +397,15 @@ const Game = () => {
         session.session_id,
         currentCard.scenario_id,
         choice,
+        session.target_questions,
       );
       setBiosphere(result.biosphere);
       setSociety(result.society);
       setEconomy(result.economy);
+      setQuestionsCompleted(result.completed_questions);
 
       if (result.game_over) {
+        setGameResult(result.game_result ?? "failed");
         setGameOver(true);
         setFinalScore(result.final_score ?? null);
         stopBgm();
@@ -363,7 +442,11 @@ const Game = () => {
     setSession(null);
     setCurrentCard(null);
     setGameOver(false);
+    setGameResult(null);
     setFinalScore(null);
+    setQuestionsCompleted(0);
+    setChoiceDisabled(false);
+    setGenerateMsg(null);
     setHoveredChoice(null);
     setBiosphere(50);
     setSociety(50);
@@ -377,22 +460,41 @@ const Game = () => {
   };
 
   const MetricBar = ({ label, value }: { label: string; value: number }) => {
-    const isLow = value <= 30;
+    let fillClass = styles.metricFillHealthy;
+    let valueClass = styles.metricValueHealthy;
+
+    if (value <= 20) {
+      fillClass = styles.metricFillCritical;
+      valueClass = styles.metricValueCritical;
+    } else if (value <= 45) {
+      fillClass = styles.metricFillWarning;
+      valueClass = styles.metricValueWarning;
+    }
+
     return (
       <div className={styles.metricRow}>
         <div className={styles.metricLabel}>
           <span>{label}</span>
-          <span className={styles.metricValue}>{value}</span>
+          <span className={`${styles.metricValue} ${valueClass}`}>{value}</span>
         </div>
         <div className={styles.metricTrack}>
           <div
-            className={`${styles.metricFill} ${isLow ? styles.metricFillLow : styles.metricFillHigh}`}
+            className={`${styles.metricFill} ${fillClass}`}
             style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
           />
         </div>
       </div>
     );
   };
+
+  const missionQuestionCount = session?.target_questions ?? selectedQuestionCount;
+  const isVictory = gameResult === "completed";
+  const completedQuestionCount =
+    isVictory
+      ? questionsCompleted > 0
+        ? questionsCompleted
+        : missionQuestionCount
+      : questionsCompleted;
 
   if (!session) {
     return (
@@ -457,14 +559,19 @@ const Game = () => {
               </div>
             </div>
 
+
             <div className={styles.startCta}>
               <button
                 type="button"
                 className={styles.primaryBtn}
                 onClick={handleStart}
-                disabled={isLoading}
+                disabled={isLoading || !scenarioSettings}
               >
-                {isLoading ? "Initializing run…" : "Begin mission"}
+                {isLoading
+                  ? "Initializing run…"
+                  : !scenarioSettings
+                    ? "Loading mission settings…"
+                    : "Begin mission"}
               </button>
               <button
                 type="button"
@@ -476,8 +583,60 @@ const Game = () => {
               </button>
               {generateMsg && <p className={styles.generateMsg}>{generateMsg}</p>}
               <p className={styles.startCtaHint}>
-                New session · scenario deck loaded
+                Mission length · {selectedQuestionCount} cards selected
               </p>
+            </div>
+
+            
+            <div className={styles.startSettingsBox}>
+              <div className={styles.startSettingsHeader}>
+                <div>
+                  <h2 className={styles.startSettingsTitle}>Mission settings</h2>
+                  <p className={styles.startSettingsText}>
+                    Choose how many scenario cards this run should last.
+                  </p>
+                </div>
+                {scenarioSettings && (
+                  <span className={styles.startSettingsBadge}>
+                    {selectedQuestionCount} cards
+                  </span>
+                )}
+              </div>
+
+              {scenarioSettings ? (
+                <>
+                  <div className={styles.startSettingsScale}>
+                    <span>Min {scenarioSettings.min_questions}</span>
+                    <span>Default {scenarioSettings.default_questions}</span>
+                    <span>Max {scenarioSettings.max_questions}</span>
+                  </div>
+                  <label
+                    className={styles.startSliderLabel}
+                    htmlFor="question-count"
+                  >
+                    Question count
+                  </label>
+                  <input
+                    id="question-count"
+                    className={styles.startSlider}
+                    type="range"
+                    min={scenarioSettings.min_questions}
+                    max={scenarioSettings.max_questions}
+                    value={selectedQuestionCount}
+                    onChange={(e) => {
+                      setSelectedQuestionCount(Number(e.target.value));
+                    }}
+                  />
+                  <p className={styles.startSettingsHint}>
+                    Finish {selectedQuestionCount} cards with all three metrics
+                    above zero to complete the mission.
+                  </p>
+                </>
+              ) : (
+                <p className={styles.startSettingsHint}>
+                  Loading mission settings…
+                </p>
+              )}
             </div>
             {error && <p className={styles.error}>{error}</p>}
           </motion.div>
@@ -508,12 +667,27 @@ const Game = () => {
             </div>
 
             <div className={styles.startHero}>
-              <div className={styles.startIconRing} aria-hidden>
-                <AlertTriangle size={28} strokeWidth={1.75} />
+              <div
+                className={`${styles.startIconRing} ${
+                  isVictory
+                    ? styles.startIconRingSuccess
+                    : styles.startIconRingFailure
+                }`}
+                aria-hidden
+              >
+                {isVictory ? (
+                  <Trophy size={28} strokeWidth={1.75} />
+                ) : (
+                  <AlertTriangle size={28} strokeWidth={1.75} />
+                )}
               </div>
-              <h1 className={styles.startTitle}>Game Over</h1>
+              <h1 className={styles.startTitle}>
+                {isVictory ? "Mission Complete" : "Game Over"}
+              </h1>
               <p className={styles.startTagline}>
-                One of your metrics collapsed — global coordination failed.
+                {isVictory
+                  ? "You kept the coalition stable and finished your selected mission with strong global balance."
+                  : "One of your metrics collapsed, so the coalition lost stability before the mission was complete."}
               </p>
             </div>
 
@@ -522,6 +696,12 @@ const Game = () => {
                 Final score: <strong>{finalScore}</strong>
               </p>
             )}
+
+            <p className={styles.startOutcomeLine}>
+              {isVictory
+                ? `Completed ${completedQuestionCount} of ${missionQuestionCount} cards. Excellent work keeping the systems in balance.`
+                : `You reached ${completedQuestionCount} of ${missionQuestionCount} cards before collapse.`}
+            </p>
 
             <div className={styles.startHud}>
               <span className={styles.startHudLabel}>Final readings</span>
@@ -538,7 +718,7 @@ const Game = () => {
                 className={styles.primaryBtn}
                 onClick={handleRestart}
               >
-                Play again
+                {isVictory ? "Run another mission" : "Try again"}
               </button>
               <button
                 type="button"
@@ -551,7 +731,9 @@ const Game = () => {
                 View leaderboard
               </button>
               <p className={styles.startCtaHint}>
-                New run · scenario deck loaded
+                {isVictory
+                  ? "Victory logged · leaderboard ready"
+                  : "New run · scenario deck loaded"}
               </p>
             </div>
           </motion.div>
