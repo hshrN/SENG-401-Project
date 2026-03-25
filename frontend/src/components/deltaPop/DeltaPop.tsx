@@ -15,36 +15,32 @@ export function DeltaPop({
   const magnitude = Math.abs(delta);
   const label = isPositive ? `+${magnitude}` : `-${magnitude}`;
 
-  const color = isPositive ? "rgb(34, 197, 94)" : "rgb(239, 68, 68)";
-
   return (
     <motion.span
-      className={styles.delta}
+      className={`${styles.delta} ${isPositive ? styles.deltaPositive : styles.deltaNegative}`}
       style={{
         left: `${Math.max(0, Math.min(100, leftPercent))}%`,
-        color,
-        textShadow: isPositive
-          ? "0 0 10px rgba(34, 197, 94, 0.35)"
-          : "0 0 10px rgba(239, 68, 68, 0.35)",
       }}
       aria-hidden
       initial={{
         opacity: 0,
-        y: isPositive ? 8 : -8,
-        scale: 0.95,
+        y: isPositive ? 12 : -12,
+        scale: 0.6,
+        rotate: isPositive ? -8 : 8,
       }}
       animate={{
-        opacity: 0,
-        y: isPositive ? -22 : 22,
-        scale: 1,
+        opacity: [0, 1, 1, 0],
+        y: isPositive ? [12, -4, -20, -30] : [-12, 4, 18, 28],
+        scale: [0.6, 1.18, 1, 0.92],
+        rotate: isPositive ? [-8, 0, 0, 4] : [8, 0, 0, -4],
       }}
       transition={{
-        duration: 0.65,
+        duration: 0.82,
         ease: "easeOut",
       }}
       onAnimationComplete={onDone}
     >
-      {label}
+      <span className={styles.deltaValue}>{label}</span>
     </motion.span>
   );
 }

@@ -133,6 +133,63 @@ type ScenarioCompletionError = Error & {
   target_questions?: number;
 };
 
+type ImpactTone = "positive" | "negative" | "mixed";
+
+type ImpactBadge = {
+  label: "Biosphere" | "Society" | "Economy";
+  delta: number;
+  x: number;
+  y: number;
+};
+
+type ImpactBurstState = {
+  id: number;
+  tone: ImpactTone;
+  totalDelta: number;
+  badges: ImpactBadge[];
+};
+
+const IMPACT_PARTICLES = Array.from({ length: 14 }, (_, index) => {
+  const angle = -Math.PI / 2 + (Math.PI * 2 * index) / 14;
+  const distance = index % 2 === 0 ? 138 : 96;
+  return {
+    x: Math.cos(angle) * distance,
+    y: Math.sin(angle) * distance,
+    rotate: (angle * 180) / Math.PI,
+    delay: index * 0.025,
+    scale: index % 3 === 0 ? 1.15 : 0.85,
+  };
+});
+
+const VICTORY_CONFETTI = Array.from({ length: 28 }, (_, index) => {
+  const palette = ["#22c55e", "#86efac", "#facc15", "#60a5fa", "#fb7185", "#34d399"];
+  return {
+    left: `${(index * 17) % 100}%`,
+    top: `${-18 - (index % 5) * 16}px`,
+    width: `${8 + (index % 3) * 4}px`,
+    height: `${16 + (index % 4) * 5}px`,
+    color: palette[index % palette.length],
+    delay: `${(index % 7) * 0.18}s`,
+    duration: `${3.8 + (index % 5) * 0.35}s`,
+    swayDuration: `${1.2 + (index % 4) * 0.18}s`,
+  };
+});
+
+function getImpactTone(deltas: number[]): ImpactTone {
+  const gains = deltas.filter((delta) => delta > 0).length;
+  const losses = deltas.filter((delta) => delta < 0).length;
+
+  if (gains > 0 && losses === 0) return "positive";
+  if (losses > 0 && gains === 0) return "negative";
+  return "mixed";
+}
+
+function getImpactHeadline(tone: ImpactTone, totalDelta: number): string {
+  if (tone === "positive") return totalDelta >= 10 ? "Coalition Surge" : "Systems Up";
+  if (tone === "negative") return totalDelta <= -10 ? "Shockwave" : "Systems Hit";
+  return totalDelta >= 0 ? "Trade-Off" : "Heavy Cost";
+}
+
 const Game = () => {
   const { user } = useAuth();
   const { isMuted, playSound, startBgm, stopBgm, setBgmSpeed, toggleMute } =
@@ -160,6 +217,7 @@ const Game = () => {
   const [scenarioSettings, setScenarioSettings] =
     useState<ScenarioSettingsResponse | null>(null);
   const [selectedQuestionCount, setSelectedQuestionCount] = useState(20);
+  const [impactBurst, setImpactBurst] = useState<ImpactBurstState | null>(null);
   const [previousCard, setPreviousCard] = useState<{
     scenario_text: string;
     decision_a: string;
@@ -179,6 +237,7 @@ const Game = () => {
   } | null>(null);
   /** After each new scenario loads: false until SCENARIO_READ_MS so players read the card first. */
   const [scenarioReady, setScenarioReady] = useState(false);
+  const impactTimeoutRef = React.useRef<number | null>(null);
 
   const navigate = useNavigate();
 
@@ -275,6 +334,9 @@ const Game = () => {
   useEffect(() => {
     return () => {
       stopBgm();
+      if (impactTimeoutRef.current !== null) {
+        window.clearTimeout(impactTimeoutRef.current);
+      }
     };
   }, [stopBgm]);
 
@@ -282,6 +344,55 @@ const Game = () => {
     localStorage.setItem("hasSeenTutorial", "1");
     setShowTutorial(false);
   };
+
+  const queueImpactBurst = useCallback(
+    (nextBiosphere: number, nextSociety: number, nextEconomy: number) => {
+      const rawBadges = [
+        { label: "Biosphere" as const, delta: nextBiosphere - biosphere },
+        { label: "Society" as const, delta: nextSociety - society },
+        { label: "Economy" as const, delta: nextEconomy - economy },
+      ].filter((badge) => badge.delta !== 0);
+
+      if (rawBadges.length === 0) return;
+
+      const spread =
+        rawBadges.length === 1
+          ? [0]
+          : rawBadges.length === 2
+            ? [-92, 92]
+            : [-122, 0, 122];
+
+      const badges: ImpactBadge[] = rawBadges.map((badge, index) => ({
+        ...badge,
+        x: spread[index],
+        y:
+          rawBadges.length === 3 && index === 1
+            ? -104
+            : -46 - (index % 2) * 18,
+      }));
+
+      const totalDelta = rawBadges.reduce(
+        (sum, badge) => sum + badge.delta,
+        0,
+      );
+
+      if (impactTimeoutRef.current !== null) {
+        window.clearTimeout(impactTimeoutRef.current);
+      }
+
+      setImpactBurst({
+        id: Date.now(),
+        tone: getImpactTone(rawBadges.map((badge) => badge.delta)),
+        totalDelta,
+        badges,
+      });
+
+      impactTimeoutRef.current = window.setTimeout(() => {
+        setImpactBurst(null);
+      }, 1350);
+    },
+    [biosphere, society, economy],
+  );
 
   const handleStart = async () => {
     playSound("game_start");
@@ -298,6 +409,10 @@ const Game = () => {
     setError(null);
     try {
       const newSession = await createSession(username, selectedQuestionCount);
+      if (impactTimeoutRef.current !== null) {
+        window.clearTimeout(impactTimeoutRef.current);
+        impactTimeoutRef.current = null;
+      }
       setSession(newSession);
       setBiosphere(newSession.biosphere);
       setSociety(newSession.society);
@@ -306,6 +421,7 @@ const Game = () => {
       setGameOver(false);
       setGameResult(null);
       setFinalScore(null);
+      setImpactBurst(null);
       setPreviousCard(null);
       setPreviousDecisionText(null);
       setShowPreviousCardPopup(false);
@@ -399,12 +515,18 @@ const Game = () => {
         choice,
         session.target_questions,
       );
+      queueImpactBurst(result.biosphere, result.society, result.economy);
       setBiosphere(result.biosphere);
       setSociety(result.society);
       setEconomy(result.economy);
       setQuestionsCompleted(result.completed_questions);
 
       if (result.game_over) {
+        if (impactTimeoutRef.current !== null) {
+          window.clearTimeout(impactTimeoutRef.current);
+          impactTimeoutRef.current = null;
+        }
+        setImpactBurst(null);
         setGameResult(result.game_result ?? "failed");
         setGameOver(true);
         setFinalScore(result.final_score ?? null);
@@ -439,12 +561,17 @@ const Game = () => {
 
   const handleRestart = () => {
     playSound("button_click");
+    if (impactTimeoutRef.current !== null) {
+      window.clearTimeout(impactTimeoutRef.current);
+      impactTimeoutRef.current = null;
+    }
     setSession(null);
     setCurrentCard(null);
     setGameOver(false);
     setGameResult(null);
     setFinalScore(null);
     setQuestionsCompleted(0);
+    setImpactBurst(null);
     setChoiceDisabled(false);
     setGenerateMsg(null);
     setHoveredChoice(null);
@@ -650,6 +777,27 @@ const Game = () => {
     return (
       <div className={styles.container}>
         <GradientBackground idPrefix="game" />
+        {isVictory && (
+          <div className={styles.confettiLayer} aria-hidden>
+            {VICTORY_CONFETTI.map((piece, index) => (
+              <span
+                key={index}
+                className={styles.confettiPiece}
+                style={
+                  {
+                    left: piece.left,
+                    top: piece.top,
+                    width: piece.width,
+                    height: piece.height,
+                    background: piece.color,
+                    animationDelay: `${piece.delay}, ${piece.delay}`,
+                    animationDuration: `${piece.duration}, ${piece.swayDuration}`,
+                  } as React.CSSProperties
+                }
+              />
+            ))}
+          </div>
+        )}
         <GlobalNav backClassName={styles.backLink} />
         <div className={styles.content}>
           <motion.div
@@ -817,6 +965,121 @@ const Game = () => {
           </div>
 
           <div className={styles.overlayCenter}>
+            <AnimatePresence>
+              {impactBurst && (
+                <motion.div
+                  key={impactBurst.id}
+                  className={styles.impactBurstOverlay}
+                  initial={{ opacity: 0, scale: 0.72 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.12 }}
+                  transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                  aria-hidden
+                >
+                  <motion.div
+                    className={`${styles.impactBurstAura} ${
+                      impactBurst.tone === "positive"
+                        ? styles.impactBurstAuraPositive
+                        : impactBurst.tone === "negative"
+                          ? styles.impactBurstAuraNegative
+                          : styles.impactBurstAuraMixed
+                    }`}
+                    initial={{ opacity: 0, scale: 0.4 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 1.18 }}
+                    transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+                  />
+
+                  <div className={styles.impactParticleField}>
+                    {IMPACT_PARTICLES.map((particle, index) => (
+                      <motion.span
+                        key={index}
+                        className={`${styles.impactParticle} ${
+                          impactBurst.tone === "positive"
+                            ? styles.impactParticlePositive
+                            : impactBurst.tone === "negative"
+                              ? styles.impactParticleNegative
+                              : styles.impactParticleMixed
+                        }`}
+                        initial={{
+                          opacity: 0,
+                          scale: 0.15,
+                          x: 0,
+                          y: 0,
+                          rotate: particle.rotate - 18,
+                        }}
+                        animate={{
+                          opacity: [0, 1, 0],
+                          scale: [0.15, particle.scale, 0.35],
+                          x: particle.x,
+                          y: particle.y,
+                          rotate: particle.rotate + 18,
+                        }}
+                        transition={{
+                          duration: 0.8,
+                          delay: particle.delay,
+                          ease: "easeOut",
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  <motion.div
+                    className={`${styles.impactVerdict} ${
+                      impactBurst.tone === "positive"
+                        ? styles.impactVerdictPositive
+                        : impactBurst.tone === "negative"
+                          ? styles.impactVerdictNegative
+                          : styles.impactVerdictMixed
+                    }`}
+                    initial={{ opacity: 0, y: 18, scale: 0.75 }}
+                    animate={{
+                      opacity: [0, 1, 1, 0],
+                      y: [18, 0, -8, -18],
+                      scale: [0.75, 1.08, 1, 0.95],
+                    }}
+                    transition={{ duration: 1.05, ease: "easeOut" }}
+                  >
+                    {getImpactHeadline(impactBurst.tone, impactBurst.totalDelta)}
+                  </motion.div>
+
+                  {impactBurst.badges.map((badge, index) => (
+                    <motion.div
+                      key={`${impactBurst.id}-${badge.label}`}
+                      className={`${styles.impactChip} ${
+                        badge.delta > 0
+                          ? styles.impactChipGain
+                          : styles.impactChipLoss
+                      }`}
+                      initial={{
+                        opacity: 0,
+                        scale: 0.42,
+                        x: 0,
+                        y: 0,
+                        rotate: badge.delta > 0 ? -8 : 8,
+                      }}
+                      animate={{
+                        opacity: [0, 1, 1, 0],
+                        scale: [0.42, 1.1, 1, 0.92],
+                        x: [0, badge.x * 0.7, badge.x, badge.x * 1.08],
+                        y: [0, badge.y * 0.5, badge.y, badge.y - 8],
+                        rotate: [badge.delta > 0 ? -8 : 8, 0, 0, badge.delta > 0 ? 5 : -5],
+                      }}
+                      transition={{
+                        duration: 1.15,
+                        delay: index * 0.06,
+                        ease: [0.22, 1, 0.36, 1],
+                      }}
+                    >
+                      <span className={styles.impactChipValue}>
+                        {badge.delta > 0 ? `+${badge.delta}` : `${badge.delta}`}
+                      </span>
+                      <span className={styles.impactChipLabel}>{badge.label}</span>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
             <ScoreOrbit
               items={[
                 { id: 1, name: "Biosphere", value: biosphere },
