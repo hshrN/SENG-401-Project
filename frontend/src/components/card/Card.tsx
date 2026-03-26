@@ -88,7 +88,7 @@ const Card = ({
           holdSoundRef.current.currentTime = 0;
           holdSoundRef.current = null;
         }
-        playSound("button_click");
+        playSound("choice_cost");
         onChoice(choice);
         return;
       }
