@@ -1,36 +1,71 @@
-import React from 'react';
-import { useAudio } from '../../context/AudioContext';
+import React from "react";
+import { Volume2, VolumeX } from "lucide-react";
+import { useAudio } from "../../context/AudioContext";
+import styles from "./AudioControls.module.css";
 
-const AudioControls = () => {
-  const { isMuted, sfxVolume, setSfxVolume, setMusicVolume, playSound } = useAudio();
+type AudioControlsProps = {
+  placement?: "nav" | "floating";
+};
+
+const AudioControls = ({ placement = "floating" }: AudioControlsProps) => {
+  const {
+    isMuted,
+    musicVolume,
+    setSfxVolume,
+    setMusicVolume,
+    playSound,
+    toggleMute,
+  } = useAudio();
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVol = parseFloat(e.target.value);
+    if (isMuted) {
+      toggleMute();
+    }
     setSfxVolume(newVol);
     setMusicVolume(newVol);
   };
 
   const handleVolumeRelease = () => {
-    playSound('button_click');
+    playSound("button_click");
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex items-center bg-black/40 backdrop-blur-md border border-white/10 rounded-full px-3 py-2">
-      <div className="flex items-center">
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          dir="rtl"
-          value={isMuted ? 0 : sfxVolume}
-          onChange={handleVolumeChange}
-          onMouseUp={handleVolumeRelease}
-          onTouchEnd={handleVolumeRelease}
-          className="w-full h-1 bg-white/30 rounded-lg appearance-none cursor-pointer accent-white"
-          aria-label="Volume"
-        />
-      </div>
+    <div
+      className={`${styles.root} ${
+        placement === "nav" ? styles.navPlacement : styles.floatingPlacement
+      }`}
+    >
+      <button
+        type="button"
+        className={styles.iconButton}
+        onClick={() => {
+          const wasMuted = isMuted;
+          toggleMute();
+          if (wasMuted) {
+            setTimeout(() => playSound("button_click"), 50);
+          } else {
+            playSound("button_click");
+          }
+        }}
+        aria-label={isMuted ? "Unmute audio" : "Mute audio"}
+      >
+        <span className={styles.icon} aria-hidden>
+          {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+        </span>
+      </button>
+      <input
+        type="range"
+        min="0"
+        max="1"
+        step="0.01"
+        value={musicVolume}
+        onChange={handleVolumeChange}
+        onMouseUp={handleVolumeRelease}
+        onTouchEnd={handleVolumeRelease}
+        className={styles.slider}
+        aria-label="Volume"
+      />
     </div>
   );
 };

@@ -5,6 +5,7 @@ Uses infrastructure (Scenario, GameRound, db).
 
 import random
 from application.game_settings import build_question_limit_settings
+from application.pressure_service import get_session_lingering_pressure
 from models import Scenario, GameRound, GameSession, db
 from domain.game import compute_final_score, apply_choice_impacts
 from datetime import datetime
@@ -40,11 +41,23 @@ def scenario_get_next(session_id: int) -> dict:
         row[0]
         for row in db.session.query(GameRound.scenario_id).filter_by(session_id=session_id).all()
     ]
+    seen_count = len(seen_ids)
 
     query = Scenario.query
     if seen_ids:
         query = query.filter(~Scenario.id.in_(seen_ids))
     available = query.all()
+
+    preferred_phase = None
+    if seen_count < 5:
+        preferred_phase = "early"
+    elif seen_count >= 8:
+        preferred_phase = "late"
+
+    if preferred_phase:
+        phased_available = [scenario for scenario in available if scenario.phase == preferred_phase]
+        if phased_available:
+            available = phased_available
 
     if not available:
         session = GameSession.query.get(session_id)
@@ -76,6 +89,8 @@ def scenario_get_next(session_id: int) -> dict:
     if session is None:
         raise ScenarioError("session not found", 404)
 
+    lingering_pressure = get_session_lingering_pressure(session_id)
+
     a_biosphere_after, a_society_after, a_economy_after = apply_choice_impacts(
         session.biosphere,
         session.society,
@@ -87,6 +102,7 @@ def scenario_get_next(session_id: int) -> dict:
         scenario.b_biosphere,
         scenario.b_society,
         scenario.b_economy,
+        lingering_pressure=lingering_pressure,
     )
 
     b_biosphere_after, b_society_after, b_economy_after = apply_choice_impacts(
@@ -100,6 +116,7 @@ def scenario_get_next(session_id: int) -> dict:
         scenario.b_biosphere,
         scenario.b_society,
         scenario.b_economy,
+        lingering_pressure=lingering_pressure,
     )
 
     return {

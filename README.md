@@ -47,6 +47,9 @@ SENG-401-Project/
 │   ├── tsconfig.json
 │   └── .gitignore
 │
+├── docs/
+│   └── architecture.md              # Detailed layered architecture guide
+│
 ├── .gitignore
 └── README.md
 ```
@@ -54,6 +57,10 @@ SENG-401-Project/
 ## Layered architecture
 
 The codebase is split into four layers; **dependencies point inward** (outer layers call inner ones; domain and infrastructure do not depend on UI or routes).
+
+Architecture guide:
+
+- See `docs/architecture.md` for the full layered architecture overview, dependency rules, repo placement guidance, and contributor onboarding.
 
 | Layer | Role | Lives in |
 |-------|------|----------|

@@ -24,8 +24,16 @@ that each affect three metrics: Biosphere, Society, and Economy.
 
 Rules for metric impacts:
 - Each impact must be an integer between -12 and 12.
-- Choices should involve trade-offs (not one obviously better than the other).
+- Every card must have real downside. No soft win-win scenarios.
+- At least one option on every card must include a serious hit between -5 and -12.
+- Avoid tiny cosmetic changes like +/-1 unless paired with a bigger structural consequence.
+- Both options should feel politically tempting for different reasons, but each should leave scars.
+- Across the full batch, rotate the heaviest downside across Biosphere, Society, and Economy.
+- Do not make Biosphere and Society the safe winners most of the time.
+- Favor second-order consequences: unrest, backlash, supply shocks, treaty failures, ecosystem tipping points,
+  debt traps, legitimacy loss, or stranded infrastructure.
 - Scenarios should feel distinct from typical ones about climate, trade, health, tech, and diplomacy.
+- Make the later half of the batch harsher than the first half.
 
 Return ONLY a JSON array (no markdown, no explanation) with this exact structure:
 [
@@ -33,6 +41,7 @@ Return ONLY a JSON array (no markdown, no explanation) with this exact structure
     "scenario_text": "Description of the scenario (1-2 sentences).",
     "decision_a": "Short label for choice A",
     "decision_b": "Short label for choice B",
+    "phase": "early or late",
     "a_biosphere": 0,
     "a_society": 0,
     "a_economy": 0,
@@ -126,12 +135,14 @@ def _call_ai(prompt: str) -> str:
     """
     primary = os.getenv("AI_PROVIDER", "openai").lower()
     fallback = "gemini" if primary == "openai" else "openai"
+    primary_error: AIServiceError | None = None
 
     # Try primary
     try:
         print(f"[AI] Trying {primary}...")
         return PROVIDERS[primary](prompt)
     except AIServiceError as primary_err:
+        primary_error = primary_err
         print(f"[AI] {primary} failed: {primary_err.message}")
 
     # Try fallback
@@ -140,7 +151,7 @@ def _call_ai(prompt: str) -> str:
         return PROVIDERS[fallback](prompt)
     except AIServiceError as fallback_err:
         raise AIServiceError(
-            f"Both providers failed. {primary}: {primary_err.message} | {fallback}: {fallback_err.message}",
+            f"Both providers failed. {primary}: {primary_error.message if primary_error else 'unknown error'} | {fallback}: {fallback_err.message}",
             502,
         )
 
@@ -181,6 +192,9 @@ def generate_scenarios(count: int = 5) -> list[dict]:
             b_biosphere=_clamp_impact(item["b_biosphere"]),
             b_society=_clamp_impact(item["b_society"]),
             b_economy=_clamp_impact(item["b_economy"]),
+            phase=str(item.get("phase", "late")).lower()
+            if str(item.get("phase", "late")).lower() in {"early", "late"}
+            else "late",
         )
         db.session.add(scenario)
         created.append({

@@ -65,8 +65,8 @@ export function StateImageCarousel({ activeIndex, hoverTiltDeg = 0 }: StateImage
           const fanDir = signedDistance >= 0 ? 1 : -1;
 
           const isActive = i === active0;
-          const fanRotY = isActive ? 0 : fanDir * 25;
-              const scale = isActive ? 1.25 : 1.0;
+          const fanRotY = isActive ? 0 : fanDir * 32;
+          const scale = isActive ? 1.22 : 1.0;
 
           return (
             <motion.div
@@ -78,8 +78,10 @@ export function StateImageCarousel({ activeIndex, hoverTiltDeg = 0 }: StateImage
                 transformStyle: "preserve-3d",
               }}
               animate={{
-                opacity: isActive ? 1 : 0.4,
-                filter: isActive ? "none" : "grayscale(0.8)",
+                opacity: isActive ? 1 : 0.7,
+                filter: isActive
+                  ? "saturate(1.02) brightness(1)"
+                  : "grayscale(0.35) brightness(0.82)",
               }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >

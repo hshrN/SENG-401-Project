@@ -145,6 +145,7 @@ export function ScoreOrbit({
           >
             <motion.div
               data-orbit-item
+              data-metric-id={item.id}
               className={styles.orbitItem}
               style={{
                 opacity: i === 0 ? 1 : 0,

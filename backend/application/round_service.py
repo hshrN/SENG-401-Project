@@ -5,6 +5,7 @@ Uses domain (apply_choice_impacts, is_game_over, compute_final_score) and infras
 
 from datetime import datetime
 from application.game_settings import normalize_target_questions
+from application.pressure_service import get_session_lingering_pressure
 from domain.game import apply_choice_impacts, is_game_over, compute_final_score
 from models import GameSession, Scenario, GameRound, db
 
@@ -42,6 +43,8 @@ def round_submit(
     except ValueError as e:
         raise RoundError(str(e), 400)
 
+    lingering_pressure = get_session_lingering_pressure(session_id)
+
     biosphere, society, economy = apply_choice_impacts(
         session.biosphere,
         session.society,
@@ -53,6 +56,7 @@ def round_submit(
         scenario.b_biosphere,
         scenario.b_society,
         scenario.b_economy,
+        lingering_pressure=lingering_pressure,
     )
 
     session.biosphere = biosphere
