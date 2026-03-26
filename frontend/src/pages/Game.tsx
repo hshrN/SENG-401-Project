@@ -192,7 +192,7 @@ function getImpactHeadline(tone: ImpactTone, totalDelta: number): string {
 
 const Game = () => {
   const { user } = useAuth();
-  const { isMuted, playSound, startBgm, stopBgm, setBgmSpeed, toggleMute } =
+  const { isMuted, playSound, startBgm, stopBgm, startEndBgm, setBgmSpeed, toggleMute } =
     useAudio();
 
   const [session, setSession] = useState<SessionResponse | null>(null);
@@ -298,9 +298,9 @@ const Game = () => {
       }
       fetchNextCard(session.session_id);
     } else {
-      stopBgm(); // Stop backgound music when session is cleared
+      startEndBgm(); // Play theme music when session is cleared or not started
     }
-  }, [session, stopBgm]);
+  }, [session, startEndBgm]);
   /* eslint-enable react-hooks/exhaustive-deps */
 
   // Handle Dynamic Background Music Speed
@@ -330,15 +330,14 @@ const Game = () => {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [showPreviousCardPopup]);
 
-  // Stop BGM if we unmount
+  // Cleanup impact timeout on unmount
   useEffect(() => {
     return () => {
-      stopBgm();
       if (impactTimeoutRef.current !== null) {
         window.clearTimeout(impactTimeoutRef.current);
       }
     };
-  }, [stopBgm]);
+  }, []);
 
   const handleTutorialComplete = () => {
     localStorage.setItem("hasSeenTutorial", "1");
@@ -476,11 +475,12 @@ const Game = () => {
         }
         stopBgm();
         playSound("crash");
+        startEndBgm();
       } finally {
         setIsLoading(false);
       }
     },
-    [selectedQuestionCount, stopBgm, playSound],
+    [selectedQuestionCount, stopBgm, playSound, startEndBgm],
 
   );
 
@@ -534,6 +534,7 @@ const Game = () => {
         setFinalScore(result.final_score ?? null);
         stopBgm();
         playSound("crash");
+        startEndBgm();
         return;
       }
 
