@@ -73,7 +73,7 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
       soundsRef.current[`bgm_${speed}`] = bgmSound;
     });
 
-    const endBgmSound = new Audio('/assets/game_end_song.mp3');
+    const endBgmSound = new Audio('/assets/game_end_song_extended.mp3');
     endBgmSound.loop = true;
     soundsRef.current['bgm_end'] = endBgmSound;
   }, []);
