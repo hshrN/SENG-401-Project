@@ -40,7 +40,7 @@ def auth_signup(username: str, password: str, confirm_password: str, password_ha
     Register a new player. Validates input and hashes password.
     Returns dict with user id and username.
     """
-    if not username or not password:
+    if not username.strip() or not password:
         raise AuthError("Username and password are required", 400)
 
     if password != confirm_password:
