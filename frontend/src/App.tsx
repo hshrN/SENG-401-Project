@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { HashRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { AudioProvider, useAudio } from "./context/AudioContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -27,7 +27,7 @@ function App() {
   return (
     <AuthProvider>
       <AudioProvider>
-        <BrowserRouter>
+        <HashRouter>
           <GlobalMusicManager />
           <Routes>
             <Route path="/" element={<Home />} />
@@ -44,7 +44,7 @@ function App() {
             />
             <Route path="/leaderboard" element={<Leaderboard />} />
           </Routes>
-        </BrowserRouter>
+        </HashRouter>
       </AudioProvider>
     </AuthProvider>
   );

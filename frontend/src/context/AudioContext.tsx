@@ -52,31 +52,31 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
   useEffect(() => {
     loadPreferences();
 
-    const clickSound = new Audio('/assets/button_click_1.mp3');
+    const clickSound = new Audio(`${process.env.PUBLIC_URL}/assets/button_click_1.mp3`);
     soundsRef.current['button_click'] = clickSound;
 
-    const buttonHoldSound = new Audio('/assets/button_hold_3.mp3');
+    const buttonHoldSound = new Audio(`${process.env.PUBLIC_URL}/assets/button_hold_3.mp3`);
     soundsRef.current['button_hold'] = buttonHoldSound;
 
-    const hoverSound = new Audio('/assets/hover_1.mp3');
+    const hoverSound = new Audio(`${process.env.PUBLIC_URL}/assets/hover_1.mp3`);
     soundsRef.current['hover'] = hoverSound;
 
-    const gameStartSound = new Audio('/assets/game_start_1.mp3');
+    const gameStartSound = new Audio(`${process.env.PUBLIC_URL}/assets/game_start_1.mp3`);
     soundsRef.current['game_start'] = gameStartSound;
 
-    const crashSound = new Audio('/assets/crash_1.mp3');
+    const crashSound = new Audio(`${process.env.PUBLIC_URL}/assets/crash_1.mp3`);
     soundsRef.current['crash'] = crashSound;
 
-    const choiceCostSound = new Audio('/assets/choice_cost_1.mp3');
+    const choiceCostSound = new Audio(`${process.env.PUBLIC_URL}/assets/choice_cost_1.mp3`);
     soundsRef.current['choice_cost'] = choiceCostSound;
 
     [1, 2, 4, 8].forEach((speed) => {
-      const bgmSound = new Audio(`/assets/music_speed_${speed}.mp3`);
+      const bgmSound = new Audio(`${process.env.PUBLIC_URL}/assets/music_speed_${speed}.mp3`);
       bgmSound.loop = true;
       soundsRef.current[`bgm_${speed}`] = bgmSound;
     });
 
-    const endBgmSound = new Audio('/assets/game_end_song_extended.mp3');
+    const endBgmSound = new Audio(`${process.env.PUBLIC_URL}/assets/game_end_song_extended.mp3`);
     endBgmSound.loop = true;
     soundsRef.current['bgm_end'] = endBgmSound;
   }, []);
