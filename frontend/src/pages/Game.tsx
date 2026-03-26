@@ -224,6 +224,13 @@ function clampNumber(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
 
+function getSpectrumColor(value: number) {
+  const normalized = clampNumber(value, 0, 100) / 100;
+  const hue = 6 + normalized * 134;
+  const lightness = 49 + normalized * 8;
+  return `hsl(${hue}, 92%, ${lightness}%)`;
+}
+
 function pickImpactOrigin(arenaWidth: number, arenaHeight: number) {
   const anchor = IMPACT_ANCHORS[Math.floor(Math.random() * IMPACT_ANCHORS.length)];
   const jitterX = (Math.random() - 0.5) * arenaWidth * 0.08;
@@ -773,27 +780,30 @@ const Game = () => {
   };
 
   const MetricBar = ({ label, value }: { label: string; value: number }) => {
-    let fillClass = styles.metricFillHealthy;
-    let valueClass = styles.metricValueHealthy;
-
-    if (value <= 20) {
-      fillClass = styles.metricFillCritical;
-      valueClass = styles.metricValueCritical;
-    } else if (value <= 45) {
-      fillClass = styles.metricFillWarning;
-      valueClass = styles.metricValueWarning;
-    }
+    const safeValue = Math.max(0, Math.min(100, value));
+    const barEnd = getSpectrumColor(safeValue);
+    const barMid = getSpectrumColor(Math.max(safeValue - 24, 0));
+    const barStart = getSpectrumColor(Math.max(safeValue - 52, 0));
 
     return (
       <div className={styles.metricRow}>
         <div className={styles.metricLabel}>
           <span>{label}</span>
-          <span className={`${styles.metricValue} ${valueClass}`}>{value}</span>
+          <span
+            className={styles.metricValue}
+            style={{ color: barEnd }}
+          >
+            {value}
+          </span>
         </div>
         <div className={styles.metricTrack}>
           <div
-            className={`${styles.metricFill} ${fillClass}`}
-            style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
+            className={styles.metricFill}
+            style={{
+              width: `${safeValue}%`,
+              background: `linear-gradient(90deg, ${barStart} 0%, ${barMid} 55%, ${barEnd} 100%)`,
+              boxShadow: `0 0 14px color-mix(in srgb, ${barEnd} 48%, transparent)`,
+            }}
           />
         </div>
       </div>
