@@ -620,6 +620,9 @@ const Game = () => {
 
   const missionQuestionCount = session?.target_questions ?? selectedQuestionCount;
   const isVictory = gameResult === "completed";
+  const questionCountIsAdjustable =
+    !!scenarioSettings &&
+    scenarioSettings.min_questions < scenarioSettings.max_questions;
   const completedQuestionCount =
     isVictory
       ? questionsCompleted > 0
@@ -714,7 +717,9 @@ const Game = () => {
               </button>
               {generateMsg && <p className={styles.generateMsg}>{generateMsg}</p>}
               <p className={styles.startCtaHint}>
-                Mission length · {selectedQuestionCount} cards selected
+                {questionCountIsAdjustable
+                  ? `Mission length · ${selectedQuestionCount} cards selected`
+                  : `Mission length · full ${selectedQuestionCount}-card deck`}
               </p>
             </div>
 
@@ -735,34 +740,47 @@ const Game = () => {
               </div>
 
               {scenarioSettings ? (
-                <>
-                  <div className={styles.startSettingsScale}>
-                    <span>Min {scenarioSettings.min_questions}</span>
-                    <span>Default {scenarioSettings.default_questions}</span>
-                    <span>Max {scenarioSettings.max_questions}</span>
+                questionCountIsAdjustable ? (
+                  <>
+                    <div className={styles.startSettingsScale}>
+                      <span>Min {scenarioSettings.min_questions}</span>
+                      <span>Default {scenarioSettings.default_questions}</span>
+                      <span>Max {scenarioSettings.max_questions}</span>
+                    </div>
+                    <label
+                      className={styles.startSliderLabel}
+                      htmlFor="question-count"
+                    >
+                      Question count
+                    </label>
+                    <input
+                      id="question-count"
+                      className={styles.startSlider}
+                      type="range"
+                      min={scenarioSettings.min_questions}
+                      max={scenarioSettings.max_questions}
+                      value={selectedQuestionCount}
+                      onChange={(e) => {
+                        setSelectedQuestionCount(Number(e.target.value));
+                      }}
+                    />
+                    <p className={styles.startSettingsHint}>
+                      Finish {selectedQuestionCount} cards with all three metrics
+                      above zero to complete the mission.
+                    </p>
+                  </>
+                ) : (
+                  <div className={styles.startSettingsLocked}>
+                    <p className={styles.startSettingsLockedValue}>
+                      Mission length locked to{" "}
+                      <strong>{scenarioSettings.max_questions} cards</strong>.
+                    </p>
+                    <p className={styles.startSettingsHint}>
+                      Generate more scenarios if you want a larger deck and an
+                      adjustable question count.
+                    </p>
                   </div>
-                  <label
-                    className={styles.startSliderLabel}
-                    htmlFor="question-count"
-                  >
-                    Question count
-                  </label>
-                  <input
-                    id="question-count"
-                    className={styles.startSlider}
-                    type="range"
-                    min={scenarioSettings.min_questions}
-                    max={scenarioSettings.max_questions}
-                    value={selectedQuestionCount}
-                    onChange={(e) => {
-                      setSelectedQuestionCount(Number(e.target.value));
-                    }}
-                  />
-                  <p className={styles.startSettingsHint}>
-                    Finish {selectedQuestionCount} cards with all three metrics
-                    above zero to complete the mission.
-                  </p>
-                </>
+                )
               ) : (
                 <p className={styles.startSettingsHint}>
                   Loading mission settings…
