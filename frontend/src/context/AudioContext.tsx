@@ -10,6 +10,7 @@ type AudioContextType = {
   playSound: (soundName: string) => HTMLAudioElement | void;
   startBgm: () => void;
   stopBgm: () => void;
+  startEndBgm: () => void;
   setBgmSpeed: (speed: 1 | 2 | 4 | 8) => void;
 };
 
@@ -34,7 +35,7 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
 
   const soundsRef = useRef<{ [key: string]: HTMLAudioElement }>({});
 
-  const activeBgmSpeedRef = useRef<1 | 2 | 4 | 8 | null>(null);
+  const activeBgmSpeedRef = useRef<1 | 2 | 4 | 8 | 'end' | null>(null);
   const isBgmPlayingRef = useRef<boolean>(false);
 
   const loadPreferences = () => {
@@ -57,17 +58,27 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
     const buttonHoldSound = new Audio(`${process.env.PUBLIC_URL}/assets/button_hold_3.mp3`);
     soundsRef.current['button_hold'] = buttonHoldSound;
 
+    const hoverSound = new Audio(`${process.env.PUBLIC_URL}/assets/hover_1.mp3`);
+    soundsRef.current['hover'] = hoverSound;
+
     const gameStartSound = new Audio(`${process.env.PUBLIC_URL}/assets/game_start_1.mp3`);
     soundsRef.current['game_start'] = gameStartSound;
 
     const crashSound = new Audio(`${process.env.PUBLIC_URL}/assets/crash_1.mp3`);
     soundsRef.current['crash'] = crashSound;
 
+    const choiceCostSound = new Audio(`${process.env.PUBLIC_URL}/assets/choice_cost_1.mp3`);
+    soundsRef.current['choice_cost'] = choiceCostSound;
+
     [1, 2, 4, 8].forEach((speed) => {
       const bgmSound = new Audio(`${process.env.PUBLIC_URL}/assets/music_speed_${speed}.mp3`);
       bgmSound.loop = true;
       soundsRef.current[`bgm_${speed}`] = bgmSound;
     });
+
+    const endBgmSound = new Audio(`${process.env.PUBLIC_URL}/assets/game_end_song_extended.mp3`);
+    endBgmSound.loop = true;
+    soundsRef.current['bgm_end'] = endBgmSound;
   }, []);
 
   const toggleMute = () => {
@@ -104,6 +115,33 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
     }
   };
 
+  const playSoundRef = useRef(playSound);
+  useEffect(() => {
+    playSoundRef.current = playSound;
+  }, [playSound]);
+
+  useEffect(() => {
+    const handleGlobalHover = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target) return;
+      
+      const button = target.closest('button, [role="button"]');
+      if (!button) return;
+
+      const related = e.relatedTarget as HTMLElement;
+      if (related && button.contains(related)) {
+         return;
+      }
+      
+      if (button.hasAttribute('disabled')) return;
+      
+      playSoundRef.current('hover');
+    };
+
+    document.addEventListener('mouseover', handleGlobalHover);
+    return () => document.removeEventListener('mouseover', handleGlobalHover);
+  }, []);
+
   const startBgm = () => {
     if (isBgmPlayingRef.current) return;
     isBgmPlayingRef.current = true;
@@ -117,6 +155,22 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
       track.volume = musicVolume;
       track.currentTime = 0;
       track.play().catch(err => console.log('BGM play failed:', err));
+    }
+  };
+
+  const startEndBgm = () => {
+    if (activeBgmSpeedRef.current === 'end' && isBgmPlayingRef.current) return;
+    
+    if (isBgmPlayingRef.current) stopBgm();
+    isBgmPlayingRef.current = true;
+    activeBgmSpeedRef.current = 'end';
+
+    if (isMuted) return;
+
+    const track = soundsRef.current['bgm_end'];
+    if (track) {
+      track.volume = musicVolume;
+      track.play().catch(err => console.log('End BGM play failed:', err));
     }
   };
 
@@ -180,6 +234,7 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
         playSound,
         startBgm,
         stopBgm,
+        startEndBgm,
         setBgmSpeed,
       }}
     >

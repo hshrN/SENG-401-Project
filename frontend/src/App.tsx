@@ -1,7 +1,7 @@
-import React from "react";
-import { HashRouter, Routes, Route } from "react-router-dom";
+import React, { useEffect } from "react";
+import { HashRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
-import { AudioProvider } from "./context/AudioContext";
+import { AudioProvider, useAudio } from "./context/AudioContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./pages/Home";
 import About from "./pages/About";
@@ -10,11 +10,25 @@ import Game from "./pages/Game";
 import Leaderboard from "./pages/Leaderboard";
 import SignUp from "./pages/SignUp";
 
+function GlobalMusicManager() {
+  const { startEndBgm } = useAudio();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.pathname !== '/game') {
+      startEndBgm();
+    }
+  }, [location.pathname, startEndBgm]);
+
+  return null;
+}
+
 function App() {
   return (
     <AuthProvider>
       <AudioProvider>
         <HashRouter>
+          <GlobalMusicManager />
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
