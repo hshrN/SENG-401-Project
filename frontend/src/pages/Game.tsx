@@ -142,11 +142,25 @@ type ImpactBadge = {
   y: number;
 };
 
+type ImpactArc = {
+  key: string;
+  metricId: number;
+  targetX: number;
+  targetY: number;
+  path: string;
+  delay: number;
+};
+
 type ImpactBurstState = {
   id: number;
   tone: ImpactTone;
   totalDelta: number;
+  viewportWidth: number;
+  viewportHeight: number;
+  originX: number;
+  originY: number;
   badges: ImpactBadge[];
+  arcs: ImpactArc[];
 };
 
 const IMPACT_PARTICLES = Array.from({ length: 14 }, (_, index) => {
@@ -175,6 +189,22 @@ const VICTORY_CONFETTI = Array.from({ length: 28 }, (_, index) => {
   };
 });
 
+const IMPACT_ANCHORS = [
+  { x: 0.16, y: 0.18 },
+  { x: 0.34, y: 0.12 },
+  { x: 0.82, y: 0.2 },
+  { x: 0.88, y: 0.46 },
+  { x: 0.76, y: 0.8 },
+  { x: 0.22, y: 0.82 },
+  { x: 0.12, y: 0.54 },
+];
+
+const IMPACT_METRIC_IDS: Record<ImpactBadge["label"], number> = {
+  Biosphere: 1,
+  Society: 2,
+  Economy: 3,
+};
+
 function getImpactTone(deltas: number[]): ImpactTone {
   const gains = deltas.filter((delta) => delta > 0).length;
   const losses = deltas.filter((delta) => delta < 0).length;
@@ -188,6 +218,71 @@ function getImpactHeadline(tone: ImpactTone, totalDelta: number): string {
   if (tone === "positive") return totalDelta >= 10 ? "Coalition Surge" : "Systems Up";
   if (tone === "negative") return totalDelta <= -10 ? "Shockwave" : "Systems Hit";
   return totalDelta >= 0 ? "Trade-Off" : "Heavy Cost";
+}
+
+function clampNumber(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function pickImpactOrigin(arenaWidth: number, arenaHeight: number) {
+  const anchor = IMPACT_ANCHORS[Math.floor(Math.random() * IMPACT_ANCHORS.length)];
+  const jitterX = (Math.random() - 0.5) * arenaWidth * 0.08;
+  const jitterY = (Math.random() - 0.5) * arenaHeight * 0.08;
+
+  return {
+    x: clampNumber(anchor.x * arenaWidth + jitterX, 72, arenaWidth - 72),
+    y: clampNumber(anchor.y * arenaHeight + jitterY, 84, arenaHeight - 84),
+  };
+}
+
+function getFallbackMetricTargets(
+  arenaWidth: number,
+  arenaHeight: number,
+  offsetLeft = 0,
+  offsetTop = 0,
+) {
+  const centerX = offsetLeft + arenaWidth / 2;
+  const centerY = offsetTop + arenaHeight / 2;
+  const radius = Math.min(arenaWidth, arenaHeight) * 0.34;
+  const angles = {
+    1: -Math.PI / 2,
+    2: Math.PI / 6,
+    3: (5 * Math.PI) / 6,
+  } as const;
+
+  return Object.fromEntries(
+    Object.entries(angles).map(([metricId, angle]) => [
+      Number(metricId),
+      {
+        x: centerX + Math.cos(angle) * radius,
+        y: centerY + Math.sin(angle) * radius,
+      },
+    ]),
+  ) as Record<number, { x: number; y: number }>;
+}
+
+function buildLightningPath(
+  originX: number,
+  originY: number,
+  targetX: number,
+  targetY: number,
+) {
+  const segments = 5;
+  const dx = targetX - originX;
+  const dy = targetY - originY;
+  let path = `M ${originX.toFixed(1)} ${originY.toFixed(1)}`;
+
+  for (let index = 1; index < segments; index += 1) {
+    const t = index / segments;
+    const wave = Math.sin(t * Math.PI * 3 + originX * 0.01) * 28;
+    const taper = 1 - t * 0.55;
+    const px = originX + dx * t + wave * taper + (Math.random() - 0.5) * 18;
+    const py = originY + dy * t + Math.cos(t * Math.PI * 4) * 14 * taper;
+    path += ` L ${px.toFixed(1)} ${py.toFixed(1)}`;
+  }
+
+  path += ` L ${targetX.toFixed(1)} ${targetY.toFixed(1)}`;
+  return path;
 }
 
 const Game = () => {
@@ -238,6 +333,8 @@ const Game = () => {
   /** After each new scenario loads: false until SCENARIO_READ_MS so players read the card first. */
   const [scenarioReady, setScenarioReady] = useState(false);
   const impactTimeoutRef = React.useRef<number | null>(null);
+  const hudArenaRef = React.useRef<HTMLDivElement | null>(null);
+  const [arcadeFontReady, setArcadeFontReady] = useState(false);
 
   const navigate = useNavigate();
 
@@ -274,6 +371,45 @@ const Game = () => {
       active = false;
     };
   }, [session, applyScenarioSettings]);
+
+  useEffect(() => {
+    if (typeof document === "undefined" || !("fonts" in document)) return;
+
+    const styleId = "arcade-classic-font-face";
+    const fontUrl = `${process.env.PUBLIC_URL || ""}/assets/ARCADECLASSIC.TTF`;
+
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement("style");
+      style.id = styleId;
+      style.textContent = `
+        @font-face {
+          font-family: "ArcadeClassic";
+          src: url("${fontUrl}") format("truetype");
+          font-display: swap;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    let cancelled = false;
+
+    const loadArcadeFont = async () => {
+      try {
+        await document.fonts.load('16px "ArcadeClassic"');
+        if (!cancelled) {
+          setArcadeFontReady(document.fonts.check('16px "ArcadeClassic"'));
+        }
+      } catch {
+        if (!cancelled) setArcadeFontReady(false);
+      }
+    };
+
+    void loadArcadeFont();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useLayoutEffect(() => {
     if (!currentCard) {
@@ -354,6 +490,34 @@ const Game = () => {
 
       if (rawBadges.length === 0) return;
 
+      const arenaRect = hudArenaRef.current?.getBoundingClientRect();
+      const viewportWidth = window.innerWidth || 1440;
+      const viewportHeight = window.innerHeight || 900;
+      const arenaWidth = arenaRect?.width ?? hudArenaRef.current?.clientWidth ?? 960;
+      const arenaHeight = arenaRect?.height ?? hudArenaRef.current?.clientHeight ?? 720;
+      const fallbackTargets = getFallbackMetricTargets(
+        arenaWidth,
+        arenaHeight,
+        arenaRect?.left ?? (viewportWidth - arenaWidth) / 2,
+        arenaRect?.top ?? (viewportHeight - arenaHeight) / 2,
+      );
+      const targetLookup = { ...fallbackTargets };
+
+      if (hudArenaRef.current) {
+        hudArenaRef.current
+          .querySelectorAll<HTMLElement>("[data-orbit-item][data-metric-id]")
+          .forEach((element) => {
+            const metricId = Number(element.dataset.metricId);
+            const rect = element.getBoundingClientRect();
+            targetLookup[metricId] = {
+              x: rect.left + rect.width / 2,
+              y: rect.top + rect.height / 2,
+            };
+          });
+      }
+
+      const origin = pickImpactOrigin(viewportWidth, viewportHeight);
+
       const spread =
         rawBadges.length === 1
           ? [0]
@@ -370,6 +534,19 @@ const Game = () => {
             : -46 - (index % 2) * 18,
       }));
 
+      const arcs: ImpactArc[] = rawBadges.map((badge, index) => {
+        const metricId = IMPACT_METRIC_IDS[badge.label];
+        const target = targetLookup[metricId] ?? fallbackTargets[metricId];
+        return {
+          key: `${badge.label}-${index}`,
+          metricId,
+          targetX: target.x,
+          targetY: target.y,
+          path: buildLightningPath(origin.x, origin.y, target.x, target.y),
+          delay: index * 0.05,
+        };
+      });
+
       const totalDelta = rawBadges.reduce(
         (sum, badge) => sum + badge.delta,
         0,
@@ -383,7 +560,12 @@ const Game = () => {
         id: Date.now(),
         tone: getImpactTone(rawBadges.map((badge) => badge.delta)),
         totalDelta,
+        viewportWidth,
+        viewportHeight,
+        originX: origin.x,
+        originY: origin.y,
         badges,
+        arcs,
       });
 
       impactTimeoutRef.current = window.setTimeout(() => {
@@ -977,8 +1159,199 @@ const Game = () => {
       {currentCard && (
         <TransmissionOverlay scenarioText={currentCard.scenario_text} />
       )}
+      <AnimatePresence>
+        {impactBurst && (
+          <motion.div
+            key={impactBurst.id}
+            className={`${styles.impactBurstOverlay} ${
+              arcadeFontReady ? styles.impactArcadeReady : ""
+            }`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.28, ease: "easeOut" }}
+            aria-hidden
+          >
+            <svg
+              className={styles.impactLightningMap}
+              viewBox={`0 0 ${impactBurst.viewportWidth} ${impactBurst.viewportHeight}`}
+              preserveAspectRatio="none"
+            >
+              {impactBurst.arcs.map((arc) => (
+                <g key={arc.key}>
+                  <motion.path
+                    className={`${styles.impactLightningGlow} ${
+                      impactBurst.tone === "positive"
+                        ? styles.impactLightningGlowPositive
+                        : impactBurst.tone === "negative"
+                          ? styles.impactLightningGlowNegative
+                          : styles.impactLightningGlowMixed
+                    }`}
+                    d={arc.path}
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    animate={{ pathLength: [0, 1, 0.92], opacity: [0, 1, 0.25] }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.7, delay: arc.delay, ease: "easeOut" }}
+                  />
+                  <motion.path
+                    className={styles.impactLightningCore}
+                    d={arc.path}
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    animate={{ pathLength: [0, 1, 0.88], opacity: [0, 1, 0] }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.55, delay: arc.delay + 0.04, ease: "easeOut" }}
+                  />
+                </g>
+              ))}
+            </svg>
+
+            {impactBurst.arcs.map((arc) => (
+              <motion.span
+                key={`${arc.key}-spark`}
+                className={`${styles.impactTargetSpark} ${
+                  impactBurst.tone === "positive"
+                    ? styles.impactTargetSparkPositive
+                    : impactBurst.tone === "negative"
+                      ? styles.impactTargetSparkNegative
+                      : styles.impactTargetSparkMixed
+                }`}
+                style={{ left: arc.targetX, top: arc.targetY }}
+                initial={{ opacity: 0, scale: 0.2 }}
+                animate={{ opacity: [0, 1, 0], scale: [0.2, 1.18, 0.4] }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.8, delay: arc.delay + 0.08, ease: "easeOut" }}
+              />
+            ))}
+
+            <motion.div
+              className={styles.impactOrigin}
+              style={{ left: impactBurst.originX, top: impactBurst.originY }}
+              initial={{ opacity: 0, scale: 0.72 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.08 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <motion.div
+                className={`${styles.impactBurstAura} ${
+                  impactBurst.tone === "positive"
+                    ? styles.impactBurstAuraPositive
+                    : impactBurst.tone === "negative"
+                      ? styles.impactBurstAuraNegative
+                      : styles.impactBurstAuraMixed
+                }`}
+                initial={{ opacity: 0, scale: 0.4 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.18 }}
+                transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+              />
+
+              <motion.span
+                className={`${styles.impactCorePulse} ${
+                  impactBurst.tone === "positive"
+                    ? styles.impactCorePulsePositive
+                    : impactBurst.tone === "negative"
+                      ? styles.impactCorePulseNegative
+                      : styles.impactCorePulseMixed
+                }`}
+                initial={{ opacity: 0, scale: 0.2 }}
+                animate={{ opacity: [0, 1, 0], scale: [0.2, 1.25, 0.55] }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.85, ease: "easeOut" }}
+              />
+
+              <div className={styles.impactParticleField}>
+                {IMPACT_PARTICLES.map((particle, index) => (
+                  <motion.span
+                    key={index}
+                    className={`${styles.impactParticle} ${
+                      impactBurst.tone === "positive"
+                        ? styles.impactParticlePositive
+                        : impactBurst.tone === "negative"
+                          ? styles.impactParticleNegative
+                          : styles.impactParticleMixed
+                    }`}
+                    initial={{
+                      opacity: 0,
+                      scale: 0.15,
+                      x: 0,
+                      y: 0,
+                      rotate: particle.rotate - 18,
+                    }}
+                    animate={{
+                      opacity: [0, 1, 0],
+                      scale: [0.15, particle.scale, 0.35],
+                      x: particle.x,
+                      y: particle.y,
+                      rotate: particle.rotate + 18,
+                    }}
+                    transition={{
+                      duration: 0.8,
+                      delay: particle.delay,
+                      ease: "easeOut",
+                    }}
+                  />
+                ))}
+              </div>
+
+              <motion.div
+                className={`${styles.impactVerdict} ${
+                  impactBurst.tone === "positive"
+                    ? styles.impactVerdictPositive
+                    : impactBurst.tone === "negative"
+                      ? styles.impactVerdictNegative
+                      : styles.impactVerdictMixed
+                }`}
+                initial={{ opacity: 0, y: 18, scale: 0.75 }}
+                animate={{
+                  opacity: [0, 1, 1, 0],
+                  y: [18, 0, -8, -18],
+                  scale: [0.75, 1.08, 1, 0.95],
+                }}
+                transition={{ duration: 1.05, ease: "easeOut" }}
+              >
+                {getImpactHeadline(impactBurst.tone, impactBurst.totalDelta)}
+              </motion.div>
+
+              {impactBurst.badges.map((badge, index) => (
+                <motion.div
+                  key={`${impactBurst.id}-${badge.label}`}
+                  className={`${styles.impactChip} ${
+                    badge.delta > 0
+                      ? styles.impactChipGain
+                      : styles.impactChipLoss
+                  }`}
+                  initial={{
+                    opacity: 0,
+                    scale: 0.42,
+                    x: 0,
+                    y: 0,
+                    rotate: badge.delta > 0 ? -8 : 8,
+                  }}
+                  animate={{
+                    opacity: [0, 1, 1, 0],
+                    scale: [0.42, 1.1, 1, 0.92],
+                    x: [0, badge.x * 0.7, badge.x, badge.x * 1.08],
+                    y: [0, badge.y * 0.5, badge.y, badge.y - 8],
+                    rotate: [badge.delta > 0 ? -8 : 8, 0, 0, badge.delta > 0 ? 5 : -5],
+                  }}
+                  transition={{
+                    duration: 1.15,
+                    delay: index * 0.06,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                >
+                  <span className={styles.impactChipValue}>
+                    {badge.delta > 0 ? `+${badge.delta}` : `${badge.delta}`}
+                  </span>
+                  <span className={styles.impactChipLabel}>{badge.label}</span>
+                </motion.div>
+              ))}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className={styles.content}>
-        <div className={styles.hudArena}>
+        <div ref={hudArenaRef} className={styles.hudArena}>
           <div className={styles.carouselCenter} aria-hidden>
             <StateImageCarousel
               activeIndex={getCardFaceIndex(biosphere, society, economy)}
@@ -987,121 +1360,6 @@ const Game = () => {
           </div>
 
           <div className={styles.overlayCenter}>
-            <AnimatePresence>
-              {impactBurst && (
-                <motion.div
-                  key={impactBurst.id}
-                  className={styles.impactBurstOverlay}
-                  initial={{ opacity: 0, scale: 0.72 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 1.12 }}
-                  transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                  aria-hidden
-                >
-                  <motion.div
-                    className={`${styles.impactBurstAura} ${
-                      impactBurst.tone === "positive"
-                        ? styles.impactBurstAuraPositive
-                        : impactBurst.tone === "negative"
-                          ? styles.impactBurstAuraNegative
-                          : styles.impactBurstAuraMixed
-                    }`}
-                    initial={{ opacity: 0, scale: 0.4 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 1.18 }}
-                    transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-                  />
-
-                  <div className={styles.impactParticleField}>
-                    {IMPACT_PARTICLES.map((particle, index) => (
-                      <motion.span
-                        key={index}
-                        className={`${styles.impactParticle} ${
-                          impactBurst.tone === "positive"
-                            ? styles.impactParticlePositive
-                            : impactBurst.tone === "negative"
-                              ? styles.impactParticleNegative
-                              : styles.impactParticleMixed
-                        }`}
-                        initial={{
-                          opacity: 0,
-                          scale: 0.15,
-                          x: 0,
-                          y: 0,
-                          rotate: particle.rotate - 18,
-                        }}
-                        animate={{
-                          opacity: [0, 1, 0],
-                          scale: [0.15, particle.scale, 0.35],
-                          x: particle.x,
-                          y: particle.y,
-                          rotate: particle.rotate + 18,
-                        }}
-                        transition={{
-                          duration: 0.8,
-                          delay: particle.delay,
-                          ease: "easeOut",
-                        }}
-                      />
-                    ))}
-                  </div>
-
-                  <motion.div
-                    className={`${styles.impactVerdict} ${
-                      impactBurst.tone === "positive"
-                        ? styles.impactVerdictPositive
-                        : impactBurst.tone === "negative"
-                          ? styles.impactVerdictNegative
-                          : styles.impactVerdictMixed
-                    }`}
-                    initial={{ opacity: 0, y: 18, scale: 0.75 }}
-                    animate={{
-                      opacity: [0, 1, 1, 0],
-                      y: [18, 0, -8, -18],
-                      scale: [0.75, 1.08, 1, 0.95],
-                    }}
-                    transition={{ duration: 1.05, ease: "easeOut" }}
-                  >
-                    {getImpactHeadline(impactBurst.tone, impactBurst.totalDelta)}
-                  </motion.div>
-
-                  {impactBurst.badges.map((badge, index) => (
-                    <motion.div
-                      key={`${impactBurst.id}-${badge.label}`}
-                      className={`${styles.impactChip} ${
-                        badge.delta > 0
-                          ? styles.impactChipGain
-                          : styles.impactChipLoss
-                      }`}
-                      initial={{
-                        opacity: 0,
-                        scale: 0.42,
-                        x: 0,
-                        y: 0,
-                        rotate: badge.delta > 0 ? -8 : 8,
-                      }}
-                      animate={{
-                        opacity: [0, 1, 1, 0],
-                        scale: [0.42, 1.1, 1, 0.92],
-                        x: [0, badge.x * 0.7, badge.x, badge.x * 1.08],
-                        y: [0, badge.y * 0.5, badge.y, badge.y - 8],
-                        rotate: [badge.delta > 0 ? -8 : 8, 0, 0, badge.delta > 0 ? 5 : -5],
-                      }}
-                      transition={{
-                        duration: 1.15,
-                        delay: index * 0.06,
-                        ease: [0.22, 1, 0.36, 1],
-                      }}
-                    >
-                      <span className={styles.impactChipValue}>
-                        {badge.delta > 0 ? `+${badge.delta}` : `${badge.delta}`}
-                      </span>
-                      <span className={styles.impactChipLabel}>{badge.label}</span>
-                    </motion.div>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
             <ScoreOrbit
               items={[
                 { id: 1, name: "Biosphere", value: biosphere },

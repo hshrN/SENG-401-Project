@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./Card.module.css";
 import { useAudio } from "../../context/AudioContext";
 
@@ -10,6 +10,17 @@ type CardProps = {
   onHoverChoice?: (choice: "a" | "b" | null) => void;
   disabled?: boolean;
 };
+
+function clampProgress(value: number) {
+  return Math.max(0, Math.min(1, value));
+}
+
+function getHoldSpectrumColor(progress: number) {
+  const safe = clampProgress(progress);
+  const hue = 6 + safe * 134;
+  const lightness = 49 + safe * 8;
+  return `hsl(${hue}, 92%, ${lightness}%)`;
+}
 
 const Card = ({
   decision_a,
@@ -28,15 +39,24 @@ const Card = ({
   const completedRef = useRef(false);
   const holdSoundRef = useRef<HTMLAudioElement | null>(null);
   const activePointerIdRef = useRef<number | null>(null);
+  const hoverChoiceRef = useRef(onHoverChoice);
 
+  useEffect(() => {
+    hoverChoiceRef.current = onHoverChoice;
+  }, [onHoverChoice]);
 
   useEffect(() => {
     return () => {
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      if (holdSoundRef.current) {
+        holdSoundRef.current.pause();
+        holdSoundRef.current.currentTime = 0;
+        holdSoundRef.current = null;
+      }
     };
   }, []);
 
-  const stopHolding = () => {
+  const stopHolding = useCallback(() => {
     if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
     startRef.current = null;
@@ -44,13 +64,21 @@ const Card = ({
     activePointerIdRef.current = null;
     setHoldingChoice(null);
     setHoldProgress(0);
-    onHoverChoice?.(null);
+    hoverChoiceRef.current?.(null);
     if (holdSoundRef.current) {
       holdSoundRef.current.pause();
       holdSoundRef.current.currentTime = 0;
       holdSoundRef.current = null;
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (disabled) stopHolding();
+  }, [disabled, stopHolding]);
+
+  useEffect(() => {
+    stopHolding();
+  }, [decision_a, decision_b, stopHolding]);
 
   const startHolding = (
     choice: "a" | "b",
@@ -59,13 +87,14 @@ const Card = ({
     if (disabled) return;
     if (holdingChoice !== null) return;
 
+    event.preventDefault();
     completedRef.current = false;
     activePointerIdRef.current = event.pointerId;
     event.currentTarget.setPointerCapture(event.pointerId);
     startRef.current = performance.now();
     setHoldingChoice(choice);
-    setHoldProgress(0);
-    onHoverChoice?.(choice);
+    setHoldProgress(0.01);
+    hoverChoiceRef.current?.(choice);
 
     const audioNode = playSound("button_hold");
     if (audioNode) {
@@ -82,7 +111,7 @@ const Card = ({
         completedRef.current = true;
         setHoldingChoice(null);
         setHoldProgress(0);
-        onHoverChoice?.(null);
+        hoverChoiceRef.current?.(null);
         if (holdSoundRef.current) {
           holdSoundRef.current.pause();
           holdSoundRef.current.currentTime = 0;
@@ -100,6 +129,11 @@ const Card = ({
   };
 
   const baseDisabled = Boolean(disabled);
+  const holdPercent = Math.round(holdProgress * 100);
+  const holdProgressA = holdingChoice === "a" ? holdProgress : 0;
+  const holdProgressB = holdingChoice === "b" ? holdProgress : 0;
+  const holdColorA = getHoldSpectrumColor(holdProgressA);
+  const holdColorB = getHoldSpectrumColor(holdProgressB);
 
   return (
     <div className={styles.card}>
@@ -117,13 +151,13 @@ const Card = ({
           disabled={baseDisabled || holdingChoice === "b"}
           aria-label={`Option A: ${decision_a}`}
           onMouseEnter={() => {
-            onHoverChoice?.("a");
+            hoverChoiceRef.current?.("a");
           }}
-          onMouseLeave={() => onHoverChoice?.(null)}
+          onMouseLeave={() => hoverChoiceRef.current?.(null)}
           onFocus={() => {
-            onHoverChoice?.("a");
+            hoverChoiceRef.current?.("a");
           }}
-          onBlur={() => onHoverChoice?.(null)}
+          onBlur={() => hoverChoiceRef.current?.(null)}
           onPointerDown={(event) => startHolding("a", event)}
           onPointerUp={(event) => {
             if (activePointerIdRef.current === event.pointerId) stopHolding();
@@ -137,14 +171,28 @@ const Card = ({
         >
           <span className={styles.decisionCardKicker}>Option A</span>
           <span className={styles.decisionCardText}>{decision_a}</span>
-          {holdingChoice === "a" && (
-            <div className={styles.holdBarTrack} aria-hidden>
-              <div
-                className={`${styles.holdBarFill} ${styles.holdBarFillA}`}
-                style={{ width: `${holdProgress * 100}%` }}
-              />
-            </div>
-          )}
+          <div
+            className={`${styles.holdBarTrack} ${
+              holdingChoice === "a" ? styles.holdBarTrackActive : ""
+            }`}
+            aria-hidden
+          >
+            <div
+              className={`${styles.holdBarFill} ${styles.holdBarFillA}`}
+              style={{
+                transform: `scaleX(${Math.max(holdProgressA, 0.001)})`,
+                background: `linear-gradient(90deg, ${getHoldSpectrumColor(
+                  Math.max(holdProgressA - 0.55, 0),
+                )} 0%, ${getHoldSpectrumColor(
+                  Math.max(holdProgressA - 0.2, 0),
+                )} 55%, ${holdColorA} 100%)`,
+                boxShadow: `0 0 16px ${holdColorA}`,
+              }}
+            />
+            <span className={styles.holdBarLabel}>
+              {holdingChoice === "a" ? `Signing ${holdPercent}%` : "Sign"}
+            </span>
+          </div>
         </button>
 
         <button
@@ -154,13 +202,13 @@ const Card = ({
           disabled={baseDisabled || holdingChoice === "a"}
           aria-label={`Option B: ${decision_b}`}
           onMouseEnter={() => {
-            onHoverChoice?.("b");
+            hoverChoiceRef.current?.("b");
           }}
-          onMouseLeave={() => onHoverChoice?.(null)}
+          onMouseLeave={() => hoverChoiceRef.current?.(null)}
           onFocus={() => {
-            onHoverChoice?.("b");
+            hoverChoiceRef.current?.("b");
           }}
-          onBlur={() => onHoverChoice?.(null)}
+          onBlur={() => hoverChoiceRef.current?.(null)}
           onPointerDown={(event) => startHolding("b", event)}
           onPointerUp={(event) => {
             if (activePointerIdRef.current === event.pointerId) stopHolding();
@@ -174,14 +222,28 @@ const Card = ({
         >
           <span className={styles.decisionCardKicker}>Option B</span>
           <span className={styles.decisionCardText}>{decision_b}</span>
-          {holdingChoice === "b" && (
-            <div className={styles.holdBarTrack} aria-hidden>
-              <div
-                className={`${styles.holdBarFill} ${styles.holdBarFillB}`}
-                style={{ width: `${holdProgress * 100}%` }}
-              />
-            </div>
-          )}
+          <div
+            className={`${styles.holdBarTrack} ${
+              holdingChoice === "b" ? styles.holdBarTrackActive : ""
+            }`}
+            aria-hidden
+          >
+            <div
+              className={`${styles.holdBarFill} ${styles.holdBarFillB}`}
+              style={{
+                transform: `scaleX(${Math.max(holdProgressB, 0.001)})`,
+                background: `linear-gradient(90deg, ${getHoldSpectrumColor(
+                  Math.max(holdProgressB - 0.55, 0),
+                )} 0%, ${getHoldSpectrumColor(
+                  Math.max(holdProgressB - 0.2, 0),
+                )} 55%, ${holdColorB} 100%)`,
+                boxShadow: `0 0 16px ${holdColorB}`,
+              }}
+            />
+            <span className={styles.holdBarLabel}>
+              {holdingChoice === "b" ? `Signing ${holdPercent}%` : "Sign"}
+            </span>
+          </div>
         </button>
       </div>
     </div>
