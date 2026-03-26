@@ -10,6 +10,7 @@ type AudioContextType = {
   playSound: (soundName: string) => HTMLAudioElement | void;
   startBgm: () => void;
   stopBgm: () => void;
+  startEndBgm: () => void;
   setBgmSpeed: (speed: 1 | 2 | 4 | 8) => void;
 };
 
@@ -34,7 +35,7 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
 
   const soundsRef = useRef<{ [key: string]: HTMLAudioElement }>({});
 
-  const activeBgmSpeedRef = useRef<1 | 2 | 4 | 8 | null>(null);
+  const activeBgmSpeedRef = useRef<1 | 2 | 4 | 8 | 'end' | null>(null);
   const isBgmPlayingRef = useRef<boolean>(false);
 
   const loadPreferences = () => {
@@ -71,6 +72,10 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
       bgmSound.loop = true;
       soundsRef.current[`bgm_${speed}`] = bgmSound;
     });
+
+    const endBgmSound = new Audio('/assets/game_end_song.mp3');
+    endBgmSound.loop = true;
+    soundsRef.current['bgm_end'] = endBgmSound;
   }, []);
 
   const toggleMute = () => {
@@ -120,6 +125,21 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
       track.volume = musicVolume;
       track.currentTime = 0;
       track.play().catch(err => console.log('BGM play failed:', err));
+    }
+  };
+
+  const startEndBgm = () => {
+    if (isBgmPlayingRef.current) stopBgm();
+    isBgmPlayingRef.current = true;
+    activeBgmSpeedRef.current = 'end';
+
+    if (isMuted) return;
+
+    const track = soundsRef.current['bgm_end'];
+    if (track) {
+      track.volume = musicVolume;
+      track.currentTime = 0;
+      track.play().catch(err => console.log('End BGM play failed:', err));
     }
   };
 
@@ -183,6 +203,7 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
         playSound,
         startBgm,
         stopBgm,
+        startEndBgm,
         setBgmSpeed,
       }}
     >

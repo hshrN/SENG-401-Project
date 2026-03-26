@@ -192,7 +192,7 @@ function getImpactHeadline(tone: ImpactTone, totalDelta: number): string {
 
 const Game = () => {
   const { user } = useAuth();
-  const { isMuted, playSound, startBgm, stopBgm, setBgmSpeed, toggleMute } =
+  const { isMuted, playSound, startBgm, stopBgm, startEndBgm, setBgmSpeed, toggleMute } =
     useAudio();
 
   const [session, setSession] = useState<SessionResponse | null>(null);
@@ -476,11 +476,12 @@ const Game = () => {
         }
         stopBgm();
         playSound("crash");
+        startEndBgm();
       } finally {
         setIsLoading(false);
       }
     },
-    [selectedQuestionCount, stopBgm, playSound],
+    [selectedQuestionCount, stopBgm, playSound, startEndBgm],
 
   );
 
@@ -534,6 +535,7 @@ const Game = () => {
         setFinalScore(result.final_score ?? null);
         stopBgm();
         playSound("crash");
+        startEndBgm();
         return;
       }
 
