@@ -20,7 +20,7 @@ def auth_login(username: str, password: str, password_verify_fn, password_hash_f
     password_verify_fn(hashed, plain) raises on mismatch.
     Returns dict with user id and username.
     """
-    if not username or not password:
+    if not username.strip() or not password:
         raise AuthError("Username and password are required", 401)
 
     player = Player.query.filter_by(username=username.strip()).first()
