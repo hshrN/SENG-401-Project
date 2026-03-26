@@ -330,12 +330,65 @@ Activate the virtual environment: `source venv/bin/activate` (or Windows equival
 
 ---
 
+## Deployment
+
+### Backend — Railway
+
+**Live API:** `<RAILWAY_BACKEND_URL>` (replace once generated in Railway dashboard)
+
+#### How it works
+
+- Railway builds from the `backend/` directory using nixpacks.
+- Config is in `backend/railway.toml` — no manual build config needed.
+- On every deploy, Railway runs `flask db upgrade` then starts Gunicorn.
+- PostgreSQL is provisioned as a Railway plugin; `DATABASE_URL` is injected automatically.
+- Auto-deploys trigger on every push to the connected branch.
+
+#### First-time setup (Railway dashboard)
+
+1. Go to: https://railway.app → New Project → Deploy from GitHub repo
+2. Select repo: `hshrN/SENG-401-Project`
+3. Click the service settings → set **Root Directory** to `/backend`
+4. Railway picks up `backend/railway.toml` automatically
+5. Add a PostgreSQL plugin: click **+ New** → **Database** → **PostgreSQL**
+6. Set the following environment variables in the service **Variables** tab:
+
+| Variable | Value |
+|---|---|
+| `FLASK_ENV` | `production` |
+| `FLASK_DEBUG` | `0` |
+| `DATABASE_URL` | auto-injected by PostgreSQL plugin — do not override |
+
+7. Click **Deploy**
+8. Once healthy, go to service **Settings → Networking** → **Generate Domain**
+9. Verify: `curl https://<your-railway-domain>/api/health` → `{"status":"ok"}`
+
+#### Redeploying
+
+Push to the connected branch — Railway redeploys automatically.
+
+#### Adding teammates
+
+Railway project → **Settings → Members → Invite** — free for collaborators.
+
+---
+
+### Frontend — itch.io
+
+**Live game:** `<ITCHIO_PROJECT_URL>` (replace once uploaded)
+
+See the frontend deployment steps once the Railway URL is confirmed.
+
+---
+
 ## Resources
 
 - Flask: https://flask.palletsprojects.com/
 - SQLAlchemy: https://docs.sqlalchemy.org/
 - React: https://react.dev/
 - PostgreSQL: https://www.postgresql.org/docs/
+- Railway: https://railway.app
+- Railway config reference: https://docs.railway.app/reference/config-as-code
 
 ---
 
