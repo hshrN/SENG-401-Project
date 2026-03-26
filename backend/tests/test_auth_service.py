@@ -88,6 +88,16 @@ def test_auth_signup_whitespace_only_username(app):
     user = Player.query.filter_by(username="").first()
     assert user is None
 
+def test_auth_signup_whitespace_only_password(app):
+    with pytest.raises(AuthError) as exc:
+        auth_signup("John", "         ", "secret123", ph.hash)
+
+    assert exc.value.status_code == 400
+    assert str(exc.value) == "Username and password are required"
+
+    user = Player.query.filter_by(username="").first()
+    assert user is None
+
 # Auth Login Tests
 
 def test_auth_login_missing_username(app):
@@ -145,6 +155,13 @@ def test_auth_login_strips_username(app):
 def test_auth_login_whitespace_only_username(app):
     with pytest.raises(AuthError) as exc:
         auth_login("    ", "secret123", _verify_password)
+
+    assert exc.value.status_code == 401
+    assert str(exc.value) == "Username and password are required"
+
+def test_auth_login_whitespace_only_pasword(app):
+    with pytest.raises(AuthError) as exc:
+        auth_login("John", "    ", _verify_password)
 
     assert exc.value.status_code == 401
     assert str(exc.value) == "Username and password are required"
