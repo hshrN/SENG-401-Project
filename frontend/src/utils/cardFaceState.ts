@@ -11,7 +11,7 @@ export const CARD_FACE_COUNT = 19;
 /** Public URLs for each card face (`/assets/1.png` … `/assets/19.png`). */
 export const CARD_FACE_URLS: readonly string[] = Array.from(
   { length: CARD_FACE_COUNT },
-  (_, i) => `/assets/${i + 1}.png`
+  (_, i) => `${process.env.PUBLIC_URL}/assets/${i + 1}.png`
 );
 
 export function getCardFaceIndex(

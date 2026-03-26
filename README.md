@@ -337,12 +337,98 @@ Activate the virtual environment: `source venv/bin/activate` (or Windows equival
 
 ---
 
+## Deployment
+
+### Backend — Railway
+
+**Live API:** `https://seng-401-project-production.up.railway.app`
+
+#### Setup (first time only)
+
+1. Go to: railway.app → **New Project** → **Deploy from GitHub repo**
+2. Select: `hshrN/SENG-401-Project`
+3. Service settings → **Root Directory**: `/backend`
+4. Service settings → **Config File Path**: `/backend/railway.toml`
+5. **+ New** → **Database** → **PostgreSQL** (auto-injects `DATABASE_URL`)
+6. Service **Variables** tab — add:
+
+| Variable | Value |
+|---|---|
+| `FLASK_ENV` | `production` |
+| `FLASK_DEBUG` | `0` |
+
+7. Click **Deploy** — Railway runs `flask db upgrade` then starts Gunicorn automatically
+8. Once healthy: service **Settings → Networking → Generate Domain**
+9. Test: `curl https://seng-401-project-production.up.railway.app/api/health` → `{"status":"ok"}`
+
+#### Redeploying
+
+Push to the connected branch — Railway redeploys automatically.
+
+#### Teammates
+
+Railway project → **Settings → Members → Invite** — collaborators are free.
+
+---
+
+### Frontend — itch.io
+
+**Live game:** `https://moyosorejobi.itch.io/sdg-decision-game`
+
+#### First-time build and upload
+
+```bash
+# 1. Set the real Railway backend URL
+echo "REACT_APP_API_URL=https://<railway-domain>.up.railway.app" > frontend/.env.production
+
+# 2. Build with relative paths (required for itch.io subdirectory hosting)
+cd frontend
+PUBLIC_URL=. npm run build
+
+# 3. Test locally before upload
+npx serve -s build -p 4173
+# open http://localhost:4173 — verify the app loads
+
+# 4. Package (index.html must be at ZIP root)
+cd build && zip -r ../game.zip . -x "*.DS_Store" && cd ..
+```
+
+#### itch.io project setup
+
+1. Go to: itch.io/dashboard → **Create new project**
+2. Set **Kind of project**: HTML
+3. Upload `frontend/game.zip` — check **"This file will be played in the browser"**
+4. **Viewport**: set to match game resolution (e.g. 1280×720)
+5. Enable **Fullscreen button**
+6. Set **Visibility** to Restricted or Draft for initial testing
+7. Save — confirm the embed loads in browser
+
+#### Rebuilding after a backend URL change
+
+```bash
+echo "REACT_APP_API_URL=https://<new-railway-domain>" > frontend/.env.production
+cd frontend && PUBLIC_URL=. npm run build
+cd build && zip -r ../game.zip . -x "*.DS_Store" && cd ..
+# Re-upload game.zip to itch.io
+```
+
+#### Notes
+
+- `PUBLIC_URL=.` makes all asset paths relative — required for itch.io iframe hosting
+- `frontend/.env.production` is gitignored (no secrets, but URL belongs in env not repo)
+- No code changes were needed — backend URL is injected at build time only
+- CORS: backend runs `CORS(app)` open — no origin restrictions, no itch.io domain config needed
+
+---
+
 ## Resources
 
 - Flask: https://flask.palletsprojects.com/
 - SQLAlchemy: https://docs.sqlalchemy.org/
 - React: https://react.dev/
 - PostgreSQL: https://www.postgresql.org/docs/
+- Railway: https://railway.app
+- Railway config reference: https://docs.railway.app/reference/config-as-code
 
 ---
 

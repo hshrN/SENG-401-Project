@@ -170,7 +170,7 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
     loadedSounds['choice_cost'] = choiceCostSound;
 
     [1, 2, 4, 8].forEach((speed) => {
-      const bgmSound = new Audio(`/assets/music_speed_${speed}.mp3`);
+      const bgmSound = new Audio(`${process.env.PUBLIC_URL}/assets/music_speed_${speed}.mp3`);
       bgmSound.loop = true;
       bgmSound.preload = 'auto';
       applyTrackVolume(
@@ -181,7 +181,7 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
       loadedSounds[`bgm_${speed}`] = bgmSound;
     });
 
-    const endBgmSound = new Audio('/assets/game_end_song_extended.mp3');
+    const endBgmSound = new Audio(`${process.env.PUBLIC_URL}/assets/game_end_song_extended.mp3`);
     endBgmSound.loop = true;
     endBgmSound.preload = 'auto';
     applyTrackVolume(
