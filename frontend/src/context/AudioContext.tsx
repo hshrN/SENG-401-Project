@@ -159,6 +159,8 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
   };
 
   const startEndBgm = () => {
+    if (activeBgmSpeedRef.current === 'end' && isBgmPlayingRef.current) return;
+    
     if (isBgmPlayingRef.current) stopBgm();
     isBgmPlayingRef.current = true;
     activeBgmSpeedRef.current = 'end';
@@ -168,7 +170,6 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
     const track = soundsRef.current['bgm_end'];
     if (track) {
       track.volume = musicVolume;
-      track.currentTime = 0;
       track.play().catch(err => console.log('End BGM play failed:', err));
     }
   };
