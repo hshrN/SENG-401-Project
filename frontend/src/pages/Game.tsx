@@ -7,7 +7,6 @@ import React, {
 import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
-  ArrowLeft,
   Eye,
   EyeOff,
   Handshake,
@@ -15,8 +14,6 @@ import {
   Radio,
   Trophy,
   Users,
-  Volume2,
-  VolumeX,
   Zap,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -39,7 +36,6 @@ import {
 import { getCardFaceIndex } from "../utils/cardFaceState";
 import { StateImageCarousel } from "../components/stateImageCarousel";
 import { TutorialOverlay } from "../components/tutorial";
-import AudioControls from "../components/shared/AudioControls";
 import { TransmissionOverlay } from "../components/TransmissionOverlay";
 import type { RadialMenuItem } from "../components/radialMenu/RadialActionMenu";
 import { CommandBarMetric } from "../components/commandBar/CommandBarMetric";
@@ -122,7 +118,8 @@ function worldStateZoneLabel(zone: "critical" | "warning" | "healthy"): string {
 }
 
 /** Time to show scenario transmission before world state + decisions (ms). */
-const SCENARIO_READ_MS = 2000;
+const SCENARIO_READ_MS = 1400;
+const TUTORIAL_VERSION = 2;
 
 type GameResultState = "failed" | "completed";
 
@@ -294,7 +291,7 @@ function buildLightningPath(
 
 const Game = () => {
   const { user } = useAuth();
-  const { isMuted, playSound, startBgm, stopBgm, startEndBgm, setBgmSpeed, toggleMute } =
+  const { playSound, startBgm, stopBgm, startEndBgm, setBgmSpeed } =
     useAudio();
 
   const [session, setSession] = useState<SessionResponse | null>(null);
@@ -344,6 +341,9 @@ const Game = () => {
   const [arcadeFontReady, setArcadeFontReady] = useState(false);
 
   const navigate = useNavigate();
+  const tutorialStorageKey = `tutorial_seen_v${TUTORIAL_VERSION}_${
+    user?.id ?? user?.username ?? "guest"
+  }`;
 
   const applyScenarioSettings = useCallback(
     (settings: ScenarioSettingsResponse) => {
@@ -434,8 +434,7 @@ const Game = () => {
   /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     if (session) {
-      // Check if user has seen tutorial before fetching cards
-      const hasSeenTutorial = localStorage.getItem("hasSeenTutorial");
+      const hasSeenTutorial = localStorage.getItem(tutorialStorageKey);
       if (!hasSeenTutorial) {
         setShowTutorial(true);
       }
@@ -443,7 +442,7 @@ const Game = () => {
     } else {
       startEndBgm(); // Play theme music when session is cleared or not started
     }
-  }, [session, startEndBgm]);
+  }, [session, startEndBgm, tutorialStorageKey]);
   /* eslint-enable react-hooks/exhaustive-deps */
 
   // Handle Dynamic Background Music Speed
@@ -483,7 +482,7 @@ const Game = () => {
   }, []);
 
   const handleTutorialComplete = () => {
-    localStorage.setItem("hasSeenTutorial", "1");
+    localStorage.setItem(tutorialStorageKey, "1");
     setShowTutorial(false);
   };
 
@@ -982,7 +981,6 @@ const Game = () => {
             {error && <p className={styles.error}>{error}</p>}
           </motion.div>
         </div>
-        <AudioControls />
       </div>
     );
   }
@@ -1100,7 +1098,6 @@ const Game = () => {
             </div>
           </motion.div>
         </div>
-        <AudioControls />
       </div>
     );
   }
@@ -1118,27 +1115,6 @@ const Game = () => {
       onSelect: () => {
         playSound("button_click");
         setShowDecisionCard((v) => !v);
-      },
-    },
-    {
-      id: "home",
-      label: "Go home",
-      icon: <ArrowLeft size={18} />,
-      onSelect: () => {
-        playSound("button_click");
-        navigate("/");
-      },
-    },
-    {
-      id: "music",
-      label: isMuted ? "Unmute music" : "Mute music",
-      icon: isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />,
-      onSelect: () => {
-        const wasMuted = isMuted;
-        toggleMute();
-        if (wasMuted) {
-          setTimeout(() => playSound("button_click"), 50);
-        }
       },
     },
   ];
@@ -1406,8 +1382,8 @@ const Game = () => {
                   ]
                   : undefined
               }
-              stageSize={650}
-              orbitRadius={300}
+              stageSize={700}
+              orbitRadius={320}
             >
               {isLoading && postChoicePhase === "idle" && (
                 <p className={styles.loading}>Loading...</p>
@@ -1605,7 +1581,6 @@ const Game = () => {
           </motion.div>
         )}
       </AnimatePresence>
-      <AudioControls />
     </div>
   );
 };

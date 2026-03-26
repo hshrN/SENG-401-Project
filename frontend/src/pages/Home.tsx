@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Hero, { HERO_PALETTES } from "../components/hero/Hero";
 import { Handshake, Leaf, Users } from "lucide-react";
-import AudioControls from "../components/shared/AudioControls";
+import GlobalNav from "../components/shared/GlobalNav";
 
 const Home = () => {
   const { isLoggedIn, logout, user } = useAuth();
@@ -11,6 +11,7 @@ const Home = () => {
 
   return (
     <>
+      <GlobalNav />
       <Hero
       palette={{ tint: HERO_PALETTES.green }}
       accent="partnership"
@@ -50,7 +51,6 @@ const Home = () => {
         }
         }}
       />
-      <AudioControls />
     </>
   );
 };

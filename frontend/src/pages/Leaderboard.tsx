@@ -18,7 +18,6 @@ import {
   leaderboardEntry,
 } from "../application/leaderboardService";
 import GlobalNav from "../components/shared/GlobalNav";
-import AudioControls from "../components/shared/AudioControls";
 
 const Leaderboard = () => {
   const { user, isLoggedIn } = useAuth();
@@ -114,7 +113,6 @@ const Leaderboard = () => {
       >
         {children}
       </div>
-      <AudioControls />
     </div>
   );
 
