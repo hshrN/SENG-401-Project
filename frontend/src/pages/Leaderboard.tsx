@@ -128,6 +128,50 @@ const Leaderboard = () => {
     </div>
   );
 
+  const periodOptions = (
+    <div
+      className={styles.periodTabs}
+      role="tablist"
+      aria-label="Leaderboard period"
+    >
+      <button
+        type="button"
+        className={`${styles.periodTab} ${period === "all-time" ? styles.activeTab : ""}`}
+        onClick={() => {
+          playSound("button_click");
+          setOffset(0);
+          setPeriod("all-time");
+        }}
+      >
+        All time
+      </button>
+
+      <button
+        type="button"
+        className={`${styles.periodTab} ${period === "weekly" ? styles.activeTab : ""}`}
+        onClick={() => {
+          playSound("button_click");
+          setOffset(0);
+          setPeriod("weekly");
+        }}
+      >
+        Weekly
+      </button>
+
+      <button
+        type="button"
+        className={`${styles.periodTab} ${period === "daily" ? styles.activeTab : ""}`}
+        onClick={() => {
+          playSound("button_click");
+          setOffset(0);
+          setPeriod("daily");
+        }}
+      >
+        Daily
+      </button>
+    </div>
+  )
+
   if (!isloading && error) {
     return shell(
       <motion.div
@@ -161,6 +205,7 @@ const Leaderboard = () => {
           <div className={gameStyles.startIconRing} aria-hidden>
             <Trophy size={28} strokeWidth={1.75} />
           </div>
+          {periodOptions}
           <h1 className={gameStyles.startTitle}>No scores yet</h1>
           <p className={gameStyles.startTagline}>
             Complete a run to claim the first spot on the board.
@@ -194,47 +239,7 @@ const Leaderboard = () => {
         <p className={gameStyles.startCtaHint}>Loading rankings…</p>
       )}
 
-      <div
-        className={styles.periodTabs}
-        role="tablist"
-        aria-label="Leaderboard period"
-      >
-        <button
-          type="button"
-          className={`${styles.periodTab} ${period === "all-time" ? styles.activeTab : ""}`}
-          onClick={() => {
-            playSound("button_click");
-            setOffset(0);
-            setPeriod("all-time");
-          }}
-        >
-          All time
-        </button>
-
-        <button
-          type="button"
-          className={`${styles.periodTab} ${period === "weekly" ? styles.activeTab : ""}`}
-          onClick={() => {
-            playSound("button_click");
-            setOffset(0);
-            setPeriod("weekly");
-          }}
-        >
-          Weekly
-        </button>
-
-        <button
-          type="button"
-          className={`${styles.periodTab} ${period === "daily" ? styles.activeTab : ""}`}
-          onClick={() => {
-            playSound("button_click");
-            setOffset(0);
-            setPeriod("daily");
-          }}
-        >
-          Daily
-        </button>
-      </div>
+      {periodOptions}
 
       {!isloading && (
         <div className={styles.tableWrap}>
