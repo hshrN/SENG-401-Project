@@ -58,6 +58,9 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
     const buttonHoldSound = new Audio('/assets/button_hold_3.mp3');
     soundsRef.current['button_hold'] = buttonHoldSound;
 
+    const hoverSound = new Audio('/assets/hover_1.mp3');
+    soundsRef.current['hover'] = hoverSound;
+
     const gameStartSound = new Audio('/assets/game_start_1.mp3');
     soundsRef.current['game_start'] = gameStartSound;
 
@@ -111,6 +114,33 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
       console.warn(`Sound ${soundName} not found.`);
     }
   };
+
+  const playSoundRef = useRef(playSound);
+  useEffect(() => {
+    playSoundRef.current = playSound;
+  }, [playSound]);
+
+  useEffect(() => {
+    const handleGlobalHover = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target) return;
+      
+      const button = target.closest('button, [role="button"]');
+      if (!button) return;
+
+      const related = e.relatedTarget as HTMLElement;
+      if (related && button.contains(related)) {
+         return;
+      }
+      
+      if (button.hasAttribute('disabled')) return;
+      
+      playSoundRef.current('hover');
+    };
+
+    document.addEventListener('mouseover', handleGlobalHover);
+    return () => document.removeEventListener('mouseover', handleGlobalHover);
+  }, []);
 
   const startBgm = () => {
     if (isBgmPlayingRef.current) return;
