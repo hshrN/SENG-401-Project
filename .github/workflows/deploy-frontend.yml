@@ -1,0 +1,40 @@
+name: Deploy frontend to itch.io
+
+on:
+  push:
+    branches: [main]
+    paths: [frontend/**]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: cd frontend && npm ci
+
+      - name: Fix asset paths for itch.io
+        run: |
+          sed -i "s|new Audio('/assets/|new Audio(\`\${process.env.PUBLIC_URL}/assets/|g" frontend/src/context/AudioContext.tsx
+          sed -i "s|new Audio('/assets/\(.*\).mp3')|new Audio(\`\${process.env.PUBLIC_URL}/assets/\1.mp3\`)|g" frontend/src/context/AudioContext.tsx
+
+      - name: Build
+        run: cd frontend && PUBLIC_URL=. npm run build
+        env:
+          REACT_APP_API_URL: https://seng-401-project-production.up.railway.app
+
+      - name: Install butler
+        run: |
+          curl -sL -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default
+          unzip -q butler.zip && chmod +x butler
+
+      - name: Package and deploy
+        run: cd frontend/build && zip -qr ../../game.zip . -x "*.DS_Store" && cd ../.. && ./butler push game.zip wxyz7/sdg-decision-game:html5
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
