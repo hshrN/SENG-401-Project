@@ -1,29 +1,8 @@
 import pytest
-from models import db, GameSession, Player, Scenario
+from models import db, GameSession, Player
 from application.session_service import session_create, SessionError
 from app import ph
-
-def create_test_scenarios(count: int):
-    scenarios = []
-
-    for i in range(count):
-        scenario = Scenario(
-            scenario_text=f"Scenario {i}",
-            decision_a="Do A",
-            decision_b="Do B",
-            a_biosphere=5,
-            a_society=3,
-            a_economy=-2,
-            b_biosphere=-3,
-            b_society=2,
-            b_economy=4,
-        )
-        scenarios.append(scenario)
-
-    db.session.add_all(scenarios)
-    db.session.commit()
-
-    return scenarios
+from test_utils import create_test_scenarios
 
 def test_create_session_missing_username(app):
     with pytest.raises(SessionError) as exc:

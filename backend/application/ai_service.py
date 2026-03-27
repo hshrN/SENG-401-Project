@@ -127,11 +127,14 @@ def _call_ai(prompt: str) -> str:
     primary = os.getenv("AI_PROVIDER", "openai").lower()
     fallback = "gemini" if primary == "openai" else "openai"
 
+    primary_err = None
+
     # Try primary
     try:
         print(f"[AI] Trying {primary}...")
         return PROVIDERS[primary](prompt)
-    except AIServiceError as primary_err:
+    except AIServiceError as e:
+        primary_err = e
         print(f"[AI] {primary} failed: {primary_err.message}")
 
     # Try fallback

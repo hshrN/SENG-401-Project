@@ -300,6 +300,14 @@ cd backend
 pytest
 ```
 
+To ignore warnings:
+
+```bash
+cd backend
+pytest -p no:warnings
+```
+
+
 ---
 
 ## Troubleshooting
