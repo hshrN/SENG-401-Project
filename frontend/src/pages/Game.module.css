@@ -1,5 +1,5 @@
 .container {
-  height: 100vh;
+  min-height: 100vh;
   width: 100%;
   background: var(--app-bg);
   color: var(--app-foreground);
@@ -8,7 +8,8 @@
   align-items: center;
   padding: 2rem;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   box-sizing: border-box;
   z-index: 0;
 }
@@ -49,9 +50,9 @@
   flex-direction: column;
   align-items: stretch;
   gap: 1.5rem;
-  flex: 1;
+  flex: 1 0 auto;
   min-height: 0;
-  padding: 0 0.5rem;
+  padding: 4.75rem 0.5rem 7rem;
   box-sizing: border-box;
 }
 
@@ -140,26 +141,122 @@
 }
 
 .impactBurstOverlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 92;
+  overflow: hidden;
+}
+
+.impactLightningMap {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 430px;
-  height: 320px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.impactLightningGlow,
+.impactLightningCore {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.impactLightningGlow {
+  stroke-width: 10px;
+  opacity: 0.92;
+  filter: blur(5px);
+}
+
+.impactLightningGlowPositive {
+  stroke: rgba(52, 211, 153, 0.92);
+}
+
+.impactLightningGlowNegative {
+  stroke: rgba(248, 113, 113, 0.9);
+}
+
+.impactLightningGlowMixed {
+  stroke: rgba(250, 204, 21, 0.92);
+}
+
+.impactLightningCore {
+  stroke: rgba(240, 253, 250, 0.96);
+  stroke-width: 2.6px;
+  filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.82));
+}
+
+.impactTargetSpark {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
   transform: translate(-50%, -50%);
   pointer-events: none;
-  z-index: 25;
+  box-shadow: 0 0 20px currentColor;
+}
+
+.impactTargetSparkPositive {
+  color: #86efac;
+  background: radial-gradient(circle, rgba(220, 252, 231, 0.95) 0%, rgba(34, 197, 94, 0) 72%);
+}
+
+.impactTargetSparkNegative {
+  color: #fca5a5;
+  background: radial-gradient(circle, rgba(254, 202, 202, 0.95) 0%, rgba(248, 113, 113, 0) 72%);
+}
+
+.impactTargetSparkMixed {
+  color: #fde68a;
+  background: radial-gradient(circle, rgba(254, 243, 199, 0.95) 0%, rgba(245, 158, 11, 0) 72%);
+}
+
+.impactOrigin {
+  position: absolute;
+  width: 0;
+  height: 0;
   overflow: visible;
+}
+
+.impactArcadeReady .impactVerdict,
+.impactArcadeReady .impactChipValue,
+.impactArcadeReady .impactChipLabel {
+  font-family: "ArcadeClassic", "Trebuchet MS", sans-serif;
 }
 
 .impactBurstAura {
   position: absolute;
-  left: 50%;
-  top: 50%;
+  left: 0;
+  top: 0;
   width: 200px;
   height: 200px;
   transform: translate(-50%, -50%);
   filter: blur(6px);
   opacity: 0.95;
+}
+
+.impactCorePulse {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 54px;
+  height: 54px;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+}
+
+.impactCorePulsePositive {
+  background: radial-gradient(circle, rgba(220, 252, 231, 0.9) 0%, rgba(34, 197, 94, 0) 72%);
+}
+
+.impactCorePulseNegative {
+  background: radial-gradient(circle, rgba(254, 202, 202, 0.92) 0%, rgba(239, 68, 68, 0) 72%);
+}
+
+.impactCorePulseMixed {
+  background: radial-gradient(circle, rgba(254, 240, 138, 0.92) 0%, rgba(245, 158, 11, 0) 72%);
 }
 
 .impactBurstAuraPositive {
@@ -189,12 +286,14 @@
 .impactParticleField {
   position: absolute;
   inset: 0;
+  width: 0;
+  height: 0;
 }
 
 .impactParticle {
   position: absolute;
-  left: 50%;
-  top: 50%;
+  left: 0;
+  top: 0;
   width: 14px;
   height: 44px;
   border-radius: 999px;
@@ -219,8 +318,8 @@
 
 .impactVerdict {
   position: absolute;
-  left: 50%;
-  top: 48%;
+  left: 0;
+  top: -30px;
   transform: translate(-50%, -50%) skew(-8deg);
   font-size: 1.08rem;
   font-weight: 900;
@@ -244,8 +343,8 @@
 
 .impactChip {
   position: absolute;
-  left: 50%;
-  top: 54%;
+  left: 0;
+  top: 0;
   transform: translate(-50%, -50%);
   min-width: 114px;
   padding: 0.55rem 0.7rem 0.5rem;
@@ -293,6 +392,21 @@
   letter-spacing: 0.11em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.72);
+}
+
+.impactArcadeReady .impactChipValue {
+  letter-spacing: 0.14em;
+  font-size: 1.06rem;
+}
+
+.impactArcadeReady .impactChipLabel {
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+}
+
+.impactArcadeReady .impactVerdict {
+  letter-spacing: 0.12em;
+  font-size: 1.16rem;
 }
 
 .commandBar {
@@ -775,6 +889,28 @@
   font-size: 0.78rem;
   line-height: 1.45;
   color: rgba(226, 232, 240, 0.78);
+}
+
+.startSettingsLocked {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.startSettingsLockedValue {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: rgba(240, 253, 244, 0.9);
+}
+
+.startSettingsLockedValue strong {
+  color: #bbf7d0;
+  font-weight: 800;
 }
 
 .startHud {
@@ -1332,14 +1468,14 @@
 }
 
 @media (max-width: 900px) {
-  .impactBurstOverlay {
-    width: 320px;
-    height: 250px;
-  }
-
   .impactBurstAura {
     width: 152px;
     height: 152px;
+  }
+
+  .impactCorePulse {
+    width: 42px;
+    height: 42px;
   }
 
   .impactVerdict {

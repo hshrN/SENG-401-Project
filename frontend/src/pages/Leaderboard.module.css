@@ -1,5 +1,5 @@
 .leaderboardContent {
-  justify-content: center;
+  justify-content: flex-start;
   padding-top: 0.5rem;
   padding-bottom: 1rem;
   box-sizing: border-box;

@@ -9,11 +9,11 @@ interface TutorialOverlayProps {
 
 const tutorialSteps = [
   {
-    title: "Welcome to Biosphere Balance",
+    title: "Welcome to Global Coalition Sim",
     content: (
       <>
-        <p>In this game, you make decisions that impact the world.</p>
-        <p>Your goal is to balance the <strong>Biosphere</strong>, <strong>Society</strong>, and <strong>Economy</strong> for as long as possible.</p>
+        <p>You are steering a fragile coalition through escalating global crises.</p>
+        <p>Your goal is to finish the selected mission while keeping <strong>Biosphere</strong>, <strong>Society</strong>, and <strong>Economy</strong> from collapsing.</p>
       </>
     ),
   },
@@ -28,21 +28,38 @@ const tutorialSteps = [
     ),
   },
   {
-    title: "How to Play",
+    title: "Read the Current State",
     content: (
       <>
-        <p>Read the scenario on the card, and select one of the two choices provided to respond.</p>
-        <p>You can't undo your choices, so choose wisely!</p>
+        <p>The middle state card shows the current world condition while the metrics orbit around it.</p>
+        <p>Use that center panel and the warning text below your choices to judge how much pressure the coalition is under.</p>
       </>
     ),
   },
   {
-    title: "Game Over",
+    title: "Sign to Confirm",
     content: (
       <>
-        <p>If any single metric collapses all the way to 0, it's <strong>Game Over</strong>.</p>
-        <p>You can always restart and try to beat your own score.</p>
-        <p>Good luck!</p>
+        <p>Read the scenario, then <strong>hold</strong> one option until the signing meter reaches 100%.</p>
+        <p>The orbit preview shows where each choice is likely to push your metrics before you commit.</p>
+      </>
+    ),
+  },
+  {
+    title: "Pressure Builds Over Time",
+    content: (
+      <>
+        <p>Neglecting the same pillar repeatedly creates hidden pressure that keeps hurting later turns.</p>
+        <p>Short-term gains can leave long-term scars, so a stable-looking run can still unravel if you ignore warning signs.</p>
+      </>
+    ),
+  },
+  {
+    title: "Mission Complete or Collapse",
+    content: (
+      <>
+        <p>If any single metric falls all the way to <strong>0</strong>, the coalition collapses and the run ends.</p>
+        <p>If you survive through your chosen card count, you complete the mission and can post your score to the leaderboard.</p>
       </>
     ),
   },
