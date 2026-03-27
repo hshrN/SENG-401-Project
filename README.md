@@ -297,6 +297,26 @@ Visit http://localhost:3000. Log in with a test account, then go to Play and cli
 
 ---
 
+## Run Tests
+
+
+### Backend Tests
+
+```bash
+cd backend
+pytest
+```
+
+To ignore warnings:
+
+```bash
+cd backend
+pytest -p no:warnings
+```
+
+
+---
+
 ## Troubleshooting
 
 ### "psycopg2 failed to build" on macOS
