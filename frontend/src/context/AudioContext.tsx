@@ -145,27 +145,27 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
     const activeSfx = activeSfxRef.current;
     const loadedSounds: { [key: string]: HTMLAudioElement } = {};
 
-    const clickSound = new Audio('/assets/button_click_1.mp3');
+    const clickSound = new Audio(`${process.env.PUBLIC_URL}/assets/button_click_1.mp3`);
     clickSound.preload = 'auto';
     loadedSounds['button_click'] = clickSound;
 
-    const buttonHoldSound = new Audio('/assets/button_hold_3.mp3');
+    const buttonHoldSound = new Audio(`${process.env.PUBLIC_URL}/assets/button_hold_3.mp3`);
     buttonHoldSound.preload = 'auto';
     loadedSounds['button_hold'] = buttonHoldSound;
 
-    const hoverSound = new Audio('/assets/hover_1.mp3');
+    const hoverSound = new Audio(`${process.env.PUBLIC_URL}/assets/hover_1.mp3`);
     hoverSound.preload = 'auto';
     loadedSounds['hover'] = hoverSound;
 
-    const gameStartSound = new Audio('/assets/game_start_1.mp3');
+    const gameStartSound = new Audio(`${process.env.PUBLIC_URL}/assets/game_start_1.mp3`);
     gameStartSound.preload = 'auto';
     loadedSounds['game_start'] = gameStartSound;
 
-    const crashSound = new Audio('/assets/crash_1.mp3');
+    const crashSound = new Audio(`${process.env.PUBLIC_URL}/assets/crash_1.mp3`);
     crashSound.preload = 'auto';
     loadedSounds['crash'] = crashSound;
 
-    const choiceCostSound = new Audio('/assets/choice_cost_1.mp3');
+    const choiceCostSound = new Audio(`${process.env.PUBLIC_URL}/assets/choice_cost_1.mp3`);
     choiceCostSound.preload = 'auto';
     loadedSounds['choice_cost'] = choiceCostSound;
 
